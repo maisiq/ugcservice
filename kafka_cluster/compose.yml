@@ -1,0 +1,37 @@
+name: kafka-cluster
+
+x-kafka: &common
+  build:
+    context: .
+    dockerfile: Dockerfile.kafka
+  healthcheck:
+    test: ["CMD", "kafka-broker-api-versions.sh", "--bootstrap-server", "localhost:9094"]
+    interval: 5s
+    start_period: 5s
+    retries: 5
+
+
+services:
+  kafka0:
+    <<: *common
+    container_name: kafka0
+    environment:
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka0:9092,EXTERNAL://kafka0:9094
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka0:9093,1@kafka1:9093,2@kafka2:9093
+
+  kafka1:
+    <<: *common
+    container_name: kafka1
+    environment:
+      - KAFKA_CFG_NODE_ID=1
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka1:9092,EXTERNAL://kafka1:9094
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka0:9093,1@kafka1:9093,2@kafka2:9093
+  
+  kafka2:
+    <<: *common
+    container_name: kafka2
+    environment:
+      - KAFKA_CFG_NODE_ID=2
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka2:9092,EXTERNAL://kafka2:9094
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka0:9093,1@kafka1:9093,2@kafka2:9093
