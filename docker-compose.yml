@@ -1,0 +1,95 @@
+name: ugc_service
+
+include:
+  - './mongo_cluster/compose.yml'
+  - './kafka_cluster/compose.yml'
+  - './ELK/compose.yml'
+
+
+services:
+  api:
+    container_name: api
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    image: ${API_DOCKER_IMAGE:?Api docker image name is required}
+    restart: unless-stopped
+    command: ["uvicorn", "--reload", "--host", "0.0.0.0", "--port", "${APP_PORT:-8000}", "--workers", "3", "src.main:app"]
+    volumes:
+      - ./api/:/app/
+    expose:
+      - 8000
+    env_file:
+      - ./.env
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://localhost:5044
+        tag: 'api'
+    healthcheck:
+      test: curl -sS localhost:8000 > /dev/null && exit 0 || exit 1
+      # test: curl -sSf localhost:8000/ping > /dev/null && exit 0 || exit 1
+      interval: 5s
+      retries: 5
+
+  consumer:
+    container_name: analytics_events_consumer
+    image: ${CONSUMER_DOCKER_IMAGE:?Consumer docker image name is required}
+    build:
+      context: ./ETL
+      dockerfile: Dockerfile.etl
+    volumes:
+      - ./ETL/consumer.py:/app/consumer.py
+    env_file:
+      - ./.env
+    depends_on:
+      kafka0:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:1.27.0-alpine
+    configs:
+      - source: nginx_conf
+        target: /etc/nginx/nginx.conf
+        mode: 0440
+    volumes:
+      - nginx_logs:/var/logs/nginx/ # */logS(!)/*
+    ports:
+      - 80:80
+    restart: unless-stopped
+
+  clickhouse:
+    container_name: clickhouse-server
+    image: clickhouse
+    ports:
+      - 18123:8123
+      - 19000:9000
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    volumes:
+      - ./clickhouse/initdb:/docker-entrypoint-initdb.d/
+    healthcheck:
+      test: ["CMD", "clickhouse-client", "--host=localhost", "--query=SELECT 1"]
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+
+configs:
+  nginx_conf:
+    file: ./nginx_server/config/nginx.conf
+
+# networks:
+#   ugc_service_network:
+#   ugc_elk_network:
+#   ugc_mongo_network:
+#   ugc_analytics_network:
+
+volumes:
+  nginx_logs:
+    name: ugc_nginx_logs
+    
