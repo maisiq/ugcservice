@@ -1,0 +1,49 @@
+FROM bitnami/kafka:latest
+
+ENV KAFKA_KRAFT_CLUSTER_ID=abcdefghijklmnopqrstuv
+
+# `node.id` specified the node’s ID in the cluster. This is the first node, so it should be left at 0. 
+# All nodes must have unique node IDs, so the second and third nodes will have an ID of 1 and 2, respectively.
+ENV KAFKA_CFG_NODE_ID=0
+
+# it will receive and consume data (broker) and perform administrative tasks (controller)
+ENV KAFKA_CFG_PROCESS_ROLES=controller,broker
+
+# `listeners` defines the addresses the Kafka node listens on, while `advertised.listeners` specifies the addresses that will be passed on to clients to connect to the node. 
+# This allows you to specify a subset of actual addresses clients should use.
+
+# listeners=PLAINTEXT://kafka1.your_domain:9092,CONTROLLER://kafka1.your_domain:9093
+ENV KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://0.0.0.0:9094
+ENV KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+ENV KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092,EXTERNAL://localhost:9094
+
+# `controller.quorum.voters` maps node IDs to their respective addresses and ports for communication. 
+# This is where you’ll specify the addresses of all cluster nodes so that each node is aware of all others. Modify the line to look like this:
+#           controller.quorum.voters=1@kafka1.your_domain:9093,2@kafka2.your_domain:9093,3@kafka3.your_domain:9093
+ENV KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@localhost:9093
+ENV KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+
+# The default number of log partitions per topic. More partitions allow greater
+# parallelism for consumption, but this will also result in more files across
+# the brokers.
+#       num.partitions=1
+
+# For three nodes, set it to a multiple of two:
+#       num.partitions=6
+# A value of 6 here ensures that each node will hold two topic partitions by default.
+
+ENV KAFKA_CFG_NUM_PARTITIONS=6
+
+# To increase the number of partitions of an existing topic, you can use the `kafka-topics` tool:
+    # ./bin/kafka-topics.sh --alter --bootstrap-server <kafka>:9092 --topic <topic-name> --partitions <new-num-partitions>
+
+
+# Next, you’ll configure the replication factor for internal topics, which keeps the consumer offsets and transaction states. Find the following lines:
+    # offsets.topic.replication.factor=2
+    # transaction.state.log.replication.factor=2
+    # Here, you specify that at least two nodes must be in sync regarding the internal metadata.
+
+ENV KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR=2
+ENV KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=2
+
+
