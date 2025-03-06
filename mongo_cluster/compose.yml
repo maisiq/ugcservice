@@ -1,0 +1,119 @@
+name: ugc_service_mongo_cluster
+
+x-properties: &props
+  image: mongo:8.0.1@sha256:9342a9279a9841fc5f8192e49dcaaf9404e6bb3a90e8cf134eb96074830dd448
+  environment:
+    - MONGO_PORT=27017
+    - MONGO_DB_PATH=/data/db
+  healthcheck:
+    test: ["CMD", "mongosh", "--eval", "db.runCommand('ping').ok"]
+    interval: 1m
+    timeout: 30s
+    retries: 5
+    start_period: 1m
+
+
+services:
+  mongo-init:
+    image: sha256:bf21d82156cea300963bc2fce6fb2c419e67eb3c21d8781a602da8546829cf65
+    command: ./tmp/init.sh
+    depends_on:
+      - mongos1
+    volumes:
+      - ./init/init.sh:/tmp/init.sh
+
+  mongors1n1:
+    <<: *props
+    container_name: mongors1n1
+    command: >
+      bash -c "
+      mongod --shardsvr 
+      --replSet mongors1 
+      --dbpath $$MONGO_DB_PATH
+      --port $$MONGO_PORT
+      --bind_ip_all"
+  mongors1n2:
+    extends: mongors1n1
+    container_name: mongors1n2
+
+  mongors1n3:
+    extends: mongors1n1
+    container_name: mongors1n3
+    depends_on:
+      mongors1n1:
+        condition: service_healthy
+      mongors1n2:
+        condition: service_healthy
+
+  mongors2n1:
+    <<: *props
+    container_name: mongors2n1
+    command: >
+      bash -c "
+      mongod --shardsvr 
+      --replSet mongors2 
+      --dbpath $$MONGO_DB_PATH
+      --port $$MONGO_PORT
+      --bind_ip_all"
+
+  mongors2n2:
+    extends: mongors2n1
+    container_name: mongors2n2
+
+  mongors2n3:
+    extends: mongors2n1
+    container_name: mongors2n3
+    depends_on:
+      mongors2n1:
+        condition: service_healthy
+      mongors2n2:
+        condition: service_healthy
+
+  mongocfg1:
+    <<: *props
+    container_name: mongocfg1
+    command: >
+      bash -c "
+      mongod --configsvr 
+      --replSet mongors1conf 
+      --dbpath $$MONGO_DB_PATH
+      --port $$MONGO_PORT
+      --bind_ip_all"
+
+  mongocfg2:
+    extends: mongocfg1
+    container_name: mongocfg2
+
+  mongocfg3:
+    extends: mongocfg1
+    container_name: mongocfg3
+    depends_on:
+      mongocfg1:
+        condition: service_healthy
+      mongocfg2:
+        condition: service_healthy
+
+  mongos1:
+    <<: *props
+    container_name: mongos1
+    command: >
+      bash -c "mongos --configdb mongors1conf/mongocfg1:27017,mongocfg2:27017,mongocfg3:27017 
+      --port $$MONGO_PORT
+      --bind_ip_all"
+    depends_on:
+      mongors1n3:
+        condition: service_healthy
+      mongors2n3:
+        condition: service_healthy
+      mongocfg3:
+        condition: service_healthy
+
+  mongos2:
+    <<: *props
+    container_name: mongos2
+    command: >
+      bash -c "
+      mongos --configdb mongors1conf/mongocfg1:27017,mongocfg2:27017,mongocfg3:27017 
+      --port $$MONGO_PORT 
+      --bind_ip_all"
+  
