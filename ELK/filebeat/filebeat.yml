@@ -1,0 +1,9 @@
+
+filebeat.inputs:
+- type: filestream
+  id: nginx-filebeat
+  paths:
+    - /var/logs/nginx/*
+
+output.logstash:
+  hosts: ["logstash:5045"]

@@ -1,0 +1,70 @@
+name: ugc_service_elk
+
+
+services:
+  elasticsearch:
+    container_name: ugc_elasticsearch
+    command: ["/es-start.sh"]
+    image: elasticsearch:8.14.3
+    volumes:
+      - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ./elasticsearch/start.sh:/es-start.sh
+    env_file:
+      - ./elasticsearch/.env
+    secrets:
+      - kibana_es_pw
+      - kibana_es_username
+
+  kibana:
+    container_name: ugc_kibana
+    image: kibana:8.14.3
+    command: ["/kibana-start.sh"]
+    ports:
+    - 5601:5601
+    environment:
+      ELASTICSEARCH_HOSTS: '["http://elasticsearch:9200"]'
+    volumes:
+      - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml
+      - ./kibana/start.sh:/kibana-start.sh
+    depends_on:
+      - elasticsearch
+    secrets:
+      - kibana_es_pw
+      - kibana_es_username
+
+  
+  filebeat_nginx:
+    container_name: filebeat_nginx
+    build:
+      context: ./filebeat
+    volumes:
+      - nginx_logs:/var/logs/nginx/:ro
+    command: ["--environment", "container"]
+    depends_on:
+      nginx: 
+        condition: service_started
+
+  logstash:
+    container_name: logstash
+    image: logstash:8.16.1
+    volumes:
+      - ./logstash/logstash.conf:/config/logstash.conf:ro
+      - ./logstash/start.sh:/start.sh
+    ports:
+      - 5044:5044/udp
+    environment:
+      - XPACK_MONITORING_ENABLED=false
+    secrets:
+      - logstash_es_user
+      - logstash_es_password
+    command: ["/start.sh"]
+
+secrets:
+  kibana_es_pw:
+    file: ./kibana/secrets/es_password.txt
+  kibana_es_username:
+    file: ./kibana/secrets/es_username.txt
+  logstash_es_user:
+    file: ./logstash/secrets/es_user.txt
+  logstash_es_password:
+    file: ./logstash/secrets/es_password.txt
