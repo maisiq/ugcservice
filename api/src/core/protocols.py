@@ -1,4 +1,4 @@
-from typing import Any, Awaitable, Protocol
+from typing import Any, Awaitable, Protocol, Self
 
 
 class ReviewOperations(Protocol):
@@ -9,3 +9,10 @@ class ReviewOperations(Protocol):
 
 class ReviewList(Protocol):
     async def reviews(self, movie_id: Any) -> Awaitable[Any]: ...
+
+
+class UOW(Protocol):
+    async def __aenter__(self) -> Self: ...
+    async def __aexit__(self, exc_type, exc, tb): ...
+    async def commit(self): ...
+    async def rollback(self): ...
