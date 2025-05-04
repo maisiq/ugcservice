@@ -1,0 +1,16 @@
+from collections.abc import Awaitable
+from typing import Any, Protocol
+
+from src.core.protocols import ReviewList, ReviewOperations
+
+
+class UserRepository(ReviewOperations, ReviewList, Protocol):
+    async def get_data(self, user_id: Any) -> Awaitable[Any]: ...
+    async def add_bookmark(self, user_id: Any, movie_id: Any) -> Awaitable[bool]: ...
+    async def remove_bookmark(self, user_id: Any, movie_id: Any) -> Awaitable[None]: ...
+    async def bookmarks(self, user_id: Any) -> Awaitable[Any]: ...
+
+
+class MovieRepository(ReviewOperations, ReviewList, Protocol):
+    async def rating(self, movie_id: Any) -> Awaitable[Any]: ...
+
