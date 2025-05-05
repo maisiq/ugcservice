@@ -33,7 +33,7 @@ class MongoUserRepository:
         )
         return result.get('bookmarks') if result is not None else []
 
-    async def data(self, user_id): 
+    async def get_data(self, user_id): 
         return await self._coll.find_one(
             {"_id": user_id},
             {"_id": 0, "reviews": 1, "bookmarks": 1, "user_id": "$_id"},
