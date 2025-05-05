@@ -1,16 +1,15 @@
 from os import getenv
 
 from fastapi import FastAPI
-import sentry_sdk
 
-from .movies.router import router as main_router
-from .analytics.router import router as analytics_router
-
+from .routers.analytics.router import router as analytics_router
+from .routers.movies.router import router as main_router
 
 SENTRY_DSN = getenv('SENTRY_DSN')
 
 
 if SENTRY_DSN:
+    import sentry_sdk
     sentry_sdk.init(
         dsn=SENTRY_DSN,
         send_default_pii=True,
