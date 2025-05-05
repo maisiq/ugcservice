@@ -1,6 +1,6 @@
 from typing import Any, Awaitable, Protocol
 
-from core.protocols import ReviewOperations
+from src.core.protocols import ReviewOperations
 
 
 class UserMovieService(ReviewOperations, Protocol):
