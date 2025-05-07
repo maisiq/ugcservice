@@ -42,3 +42,13 @@ class MongoMovieRepository:
             upsert=True,
         )
         return result.acknowledged
+
+    async def update_review(self, user_id, movie_id, review):
+        result = await self._coll.update_one(
+            {'_id': movie_id, 'reviews.user_id': user_id},
+            {"$set": {"reviews.$.review": review}},
+            session=self._session,
+        )
+        if result.matched_count == 0:
+            raise Exception('There is no review with this id')
+        return result.acknowledged
