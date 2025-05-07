@@ -10,20 +10,20 @@ class MongoUserMovieService:
 
     async def add_review(self, user_id, movie_id, review): 
         async with self._uow as uow:
-            self._user_repo.add_review(user_id, movie_id, review)
-            self._movie_repo.add_review(user_id, movie_id, review)
+            await self._user_repo.add_review(user_id, movie_id, review)
+            await self._movie_repo.add_review(user_id, movie_id, review)
             await uow.commit()
 
     async def update_review(self, user_id, movie_id, review): 
         async with self._uow as uow:
-            self._user_repo.update_review(user_id, movie_id, review)
-            self._movie_repo.update_review(user_id, movie_id, review)
+            await self._user_repo.update_review(user_id, movie_id, review)
+            await self._movie_repo.update_review(user_id, movie_id, review)
             await uow.commit()
 
     async def delete_review(self, user_id, review_id): 
         async with self._uow as uow:
-            self._user_repo.delete_review(user_id, review_id)
-            self._movie_repo.delete_review(user_id, review_id)
+            await self._user_repo.delete_review(user_id, review_id)
+            await self._movie_repo.delete_review(user_id, review_id)
             await uow.commit()
 
     async def like(self, user_id, review_id): 
