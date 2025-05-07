@@ -52,3 +52,11 @@ class MongoMovieRepository:
         if result.matched_count == 0:
             raise Exception('There is no review with this id')
         return result.acknowledged
+
+    async def delete_review(self, user_id, movie_id):
+        result = await self._coll.update_one(
+            {'_id': movie_id, 'reviews.user_id': user_id},
+            {"$pull": {"reviews.user_id": user_id}},
+            session=self._session,
+        )
+        return result.acknowledged
