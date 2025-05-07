@@ -23,3 +23,22 @@ class MongoMovieRepository:
             session=self._session,
         )
         return data if data is not None else {'rating': None}
+    
+    async def add_review(self, user_id, movie_id, review):
+        result = await self._coll.find_one(
+            {'_id': movie_id, 'reviews.user_id': user_id},
+            session=self._session,
+        )
+
+        if result:
+            raise Exception(' This user already has review on movie')
+        
+        result = await self._coll.update_one(
+            {'_id': movie_id},
+            {"$push": {
+                "reviews": {'user_id': user_id, 'review': review}
+            }},
+            session=self._session,
+            upsert=True,
+        )
+        return result.acknowledged
