@@ -35,8 +35,8 @@ class MongoMovieRepository:
         
         result = await self._coll.update_one(
             {'_id': movie_id},
-            {"$push": {
-                "reviews": {'user_id': user_id, 'review': review}
+            {'$push': {
+                'reviews': {'user_id': user_id, 'review': review}
             }},
             session=self._session,
             upsert=True,
@@ -46,7 +46,7 @@ class MongoMovieRepository:
     async def update_review(self, user_id, movie_id, review):
         result = await self._coll.update_one(
             {'_id': movie_id, 'reviews.user_id': user_id},
-            {"$set": {"reviews.$.review": review}},
+            {'$set': {'reviews.$.review': review}},
             session=self._session,
         )
         if result.matched_count == 0:
@@ -56,7 +56,7 @@ class MongoMovieRepository:
     async def delete_review(self, user_id, movie_id):
         result = await self._coll.update_one(
             {'_id': movie_id, 'reviews.user_id': user_id},
-            {"$pull": {"reviews.user_id": user_id}},
+            {'$pull': {'reviews': {'user_id': user_id}}},
             session=self._session,
         )
         return result.acknowledged
