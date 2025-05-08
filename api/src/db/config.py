@@ -6,7 +6,7 @@ from typing import AsyncGenerator
 import backoff
 from fastapi import status
 from fastapi.exceptions import HTTPException
-from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.errors import ServerSelectionTimeoutError
 
 CONN_URI = getenv('MONGODB_URI')
@@ -32,7 +32,7 @@ def database_exception_handler(e):
 )
 async def get_db_client() -> AsyncGenerator[AsyncIOMotorClient, None]:
     client = AsyncIOMotorClient(
-        CONN_URI, 
+        CONN_URI,
         maxpoolsize=100,
         serverselectiontimeoutms=5000,
     )
@@ -41,4 +41,3 @@ async def get_db_client() -> AsyncGenerator[AsyncIOMotorClient, None]:
     await db.command({'ping': 1})
     logging.info('Подключение к MongoDB установлено')
     return client
-

@@ -1,6 +1,4 @@
 from fastapi.routing import APIRouter
-from fastapi import Depends, Body, status
-from fastapi.responses import JSONResponse
 
 from .models import ViewMessage
 from .utils import send_one
