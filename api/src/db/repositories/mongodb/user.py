@@ -55,7 +55,7 @@ class MongoUserRepository:
         )
 
         if result:
-            raise Exception(' This user already has review on movie')
+            raise Exception('This user already has review on movie')
 
         result = await self._coll.update_one(
             {'_id': user_id},
@@ -80,7 +80,7 @@ class MongoUserRepository:
     async def delete_review(self, user_id, movie_id):
         result = await self._coll.update_one(
             {'_id': user_id, 'reviews.movie_id': movie_id},
-            {"$pull": {"reviews.movie_id": movie_id}},
+            {"$pull": {"reviews": {"movie_id": movie_id}}},
             session=self._session,
         )
         return result.acknowledged
