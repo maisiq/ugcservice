@@ -10,12 +10,12 @@ class MongoUOW:
         return self
 
     async def __aexit__(self, exc_type, exc, tb):
-        if self._session.in_transaction():
+        if self._session.in_transaction:
             await self._session.abort_transaction()
 
 
     async def commit(self):
-        if not self._session.in_transaction():
+        if not self._session.in_transaction:
             raise RuntimeError('No active transaction to commit')
 
         await self._session.commit_transaction()
