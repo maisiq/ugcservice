@@ -26,5 +26,8 @@ class MongoUserMovieService:
             await self._movie_repo.delete_review(user_id, movie_id)
             await uow.commit()
 
-    async def like(self, user_id, review_id):
-        raise NotImplementedError
+    async def rate_movie(self, user_id, movie_id, value):
+        async with self._uow as uow:
+            await self._user_repo.rate_movie(user_id, movie_id, value)
+            await self._movie_repo.rate(user_id, movie_id, value)
+            await uow.commit()
