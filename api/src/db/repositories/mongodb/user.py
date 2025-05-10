@@ -6,12 +6,12 @@ from src.db.config import MONGO_DB, MongoCollections
 class MongoUserRepository:
     def __init__(self, session: AsyncIOMotorClientSession):
         self._session = session
-        self._coll = self._session.client[MONGO_DB][MongoCollections.users] # ADD CONSTANT VALUE TO CONFIG
+        self._coll = self._session.client[MONGO_DB][MongoCollections.users]  # ADD CONSTANT VALUE TO CONFIG
 
-    async def add_bookmark(self, user_id, movie_id): 
+    async def add_bookmark(self, user_id, movie_id):
         result = await self._coll.update_one(
-            {"_id": user_id}, 
-            {"$addToSet": {"bookmarks": movie_id}}, 
+            {"_id": user_id},
+            {"$addToSet": {"bookmarks": movie_id}},
             upsert=True,
             session=self._session,
         )
@@ -19,7 +19,7 @@ class MongoUserRepository:
 
     async def remove_bookmark(self, user_id, movie_id):
         result = await self._coll.update_one(
-            {"_id": user_id}, 
+            {"_id": user_id},
             {"$pull": {"bookmarks": movie_id}},
             session=self._session,
         )
@@ -27,30 +27,30 @@ class MongoUserRepository:
 
     async def bookmarks(self, user_id):
         result = await self._coll.find_one(
-            {"_id": user_id}, 
+            {"_id": user_id},
             {'_id': 0, 'bookmarks': 1},
             session=self._session,
         )
         return result.get('bookmarks') if result is not None else []
 
-    async def get_data(self, user_id): 
+    async def get_data(self, user_id):
         return await self._coll.find_one(
             {"_id": user_id},
             {"_id": 0, "reviews": 1, "bookmarks": 1, "user_id": "$_id"},
             session=self._session,
         )
 
-    async def reviews(self, user_id): 
+    async def reviews(self, user_id):
         result = await self._coll.find_one(
             {"_id": user_id},
             {'_id': 0, 'reviews': 1},
             session=self._session,
         )
         return result.get('reviews') if result is not None else []
-    
+
     async def add_review(self, user_id, movie_id, review):
         result = await self._coll.find_one(
-            {'_id': movie_id, 'reviews.user_id': user_id},
+            {'_id': user_id, 'reviews.movie_id': movie_id},
             session=self._session,
         )
 
@@ -66,7 +66,7 @@ class MongoUserRepository:
             upsert=True,
         )
         return result.acknowledged
-    
+
     async def update_review(self, user_id, movie_id, review):
         result = await self._coll.update_one(
             {'_id': user_id, 'reviews.movie_id': movie_id},
@@ -83,4 +83,19 @@ class MongoUserRepository:
             {"$pull": {"reviews": {"movie_id": movie_id}}},
             session=self._session,
         )
+        return result.acknowledged
+
+    async def rate_movie(self, user_id, movie_id, value):
+        result = await self._coll.update_one(
+            {'_id': user_id, 'ratings.movie_id': movie_id},
+            {'$set': {'ratings.$.value': value}},
+        )
+
+        if result.matched_count == 0:
+            result = await self._coll.update_one(
+                {'_id': user_id},
+                {'$push': {'ratings': {'movie_id': movie_id, 'value': value}}},
+                session=self._session,
+                upsert=True,
+            )
         return result.acknowledged
