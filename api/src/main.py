@@ -2,8 +2,8 @@ from os import getenv
 
 from fastapi import FastAPI
 
-from .routers.analytics.router import router as analytics_router
-from .routers.movies.router import router as main_router
+from .analytics.router import router as analytics_router
+from .movies.router import router as movies_router
 
 SENTRY_DSN = getenv('SENTRY_DSN')
 
@@ -20,8 +20,8 @@ if SENTRY_DSN:
     )
 
 app = FastAPI(
-    debug=True,
+    debug=getenv('API_DEBUG', False),
 )
 
-app.include_router(main_router)
+app.include_router(movies_router)
 app.include_router(analytics_router)

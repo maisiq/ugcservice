@@ -3,8 +3,8 @@ from motor.motor_asyncio import AsyncIOMotorClientSession
 
 from src.core.uow import MongoUOW
 from src.db.dependencies import get_session
-from src.db.repositories.mongodb.movie import MongoMovieRepository
-from src.db.repositories.mongodb.user import MongoUserRepository
+from src.movies.repositories.mongodb.movie import MongoMovieRepository
+from src.movies.repositories.mongodb.user import MongoUserRepository
 from src.services.user_movie import MongoUserMovieService
 
 

@@ -1,4 +1,4 @@
-from src.db.repositories.protocols import MovieRepository, UserRepository
+from src.movies.repositories.protocols import MovieRepository, UserRepository
 from src.core.protocols import UOW
 
 
