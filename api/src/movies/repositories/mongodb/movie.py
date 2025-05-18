@@ -1,6 +1,7 @@
 from motor.motor_asyncio import AsyncIOMotorClientSession
 
 from src.db.config import MONGO_DB, MongoCollections
+from src.core.exceptions import EntityDoesNotExist, EntityAlreadyExists
 
 
 class MongoMovieRepository:
@@ -25,7 +26,7 @@ class MongoMovieRepository:
         if data is not None:
             resp = {'rating': round(data['rating'], 1)}
         else:
-            resp = {'rating': None}
+            raise EntityDoesNotExist('Movie doesnt exist')
         return resp
 
     async def add_review(self, user_id, movie_id, review):
@@ -35,7 +36,7 @@ class MongoMovieRepository:
         )
 
         if result:
-            raise Exception(' This user already has review on movie')
+            raise EntityAlreadyExists('This user already has review on movie')
 
         result = await self._coll.update_one(
             {'_id': movie_id},
@@ -54,7 +55,7 @@ class MongoMovieRepository:
             session=self._session,
         )
         if result.matched_count == 0:
-            raise Exception('There is no review with this id')
+            raise EntityDoesNotExist('There is no review with this id')
         return result.acknowledged
 
     async def delete_review(self, user_id, movie_id):

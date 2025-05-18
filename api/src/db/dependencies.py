@@ -2,8 +2,8 @@ from fastapi import Depends
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorClientSession
 
 from src.db.config import get_db_client
-from .repositories.mongodb.movie import MongoMovieRepository
-from .repositories.mongodb.user import MongoUserRepository
+from src.movies.repositories.mongodb.movie import MongoMovieRepository
+from src.movies.repositories.mongodb.user import MongoUserRepository
 
 
 async def get_session(client: AsyncIOMotorClient = Depends(get_db_client, use_cache=False)):

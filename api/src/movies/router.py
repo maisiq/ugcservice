@@ -5,8 +5,8 @@ from fastapi.responses import JSONResponse
 from fastapi.routing import APIRouter
 
 from src.db.dependencies import movie_repo, user_repo
-from src.db.exceptions import UserDoesNotExist
-from src.db.repositories.protocols import MovieRepository, UserRepository
+from src.core.exceptions import EntityDoesNotExist
+from src.movies.repositories.protocols import MovieRepository, UserRepository
 from src.services.dependencies import user_movie_service
 from src.services.protocols import UserMovieService
 
@@ -52,7 +52,7 @@ async def add_to_bookmarks(
 ):
     try:
         await repo.add_bookmark(user_id, movie_id)
-    except UserDoesNotExist:
+    except EntityDoesNotExist:
         return JSONResponse({'detail': 'User does not exist'}, status_code=status.HTTP_400_BAD_REQUEST)
     return JSONResponse({'status': 'ok'}, status_code=status.HTTP_201_CREATED)
 
@@ -65,7 +65,7 @@ async def remove_from_bookmarks(
 ):
     try:
         await repo.remove_bookmark(user_id, movie_id)
-    except UserDoesNotExist:
+    except EntityDoesNotExist:
         return JSONResponse({'detail': 'User does not exist'}, status_code=status.HTTP_400_BAD_REQUEST)
     return JSONResponse({'status': 'ok'}, status_code=status.HTTP_202_ACCEPTED)
 
