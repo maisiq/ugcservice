@@ -1,4 +1,0 @@
-
-
-class UserDoesNotExist(Exception):
-    pass

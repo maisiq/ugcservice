@@ -8,7 +8,7 @@ class ReviewOperations(Protocol):
 
 
 class ReviewList(Protocol):
-    async def reviews(self, movie_id: Any) -> Awaitable[Any]: ...
+    async def reviews(self, id: Any) -> Awaitable[Any]: ...
 
 
 class UOW(Protocol):
