@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 from fastapi.routing import APIRouter
 
 from src.db.dependencies import movie_repo, user_repo
-from src.core.exceptions import EntityDoesNotExist
+from src.core.exceptions import EntityDoesNotExist, EntityAlreadyExists
 from src.movies.repositories.protocols import MovieRepository, UserRepository
 from src.services.dependencies import user_movie_service
 from src.services.protocols import UserMovieService
@@ -20,13 +20,16 @@ MoviesRepoDependence: TypeAlias = Annotated[MovieRepository, Depends(movie_repo)
 
 @router.get('/movie/{movie_id}/rating')
 async def get_movie_rating(movie_id: str, repo: MoviesRepoDependence):
-    resp = await repo.rating(movie_id)
+    try:
+        resp = await repo.rating(movie_id)
+    except EntityDoesNotExist as e:
+        return JSONResponse(str(e), status_code=status.HTTP_404_NOT_FOUND)
     return JSONResponse(resp, status_code=status.HTTP_200_OK)
 
 
 @router.post('/movie/{movie_id}/rating')
 async def like_movie(movie_id: str, user_id: Annotated[int, Body(...)], service: UserMovieServiceDependence):
-    await service.like(movie_id, user_id)
+    await service.rate_movie(movie_id, user_id)
     return JSONResponse({'status': 'ok'}, status_code=status.HTTP_200_OK)
 
 
@@ -41,7 +44,10 @@ async def get_user_data(user_id: int, repo: UserRepoDependence):
 
 @router.get('/bookmarks/{user_id}')
 async def user_bookmarks(user_id: int, repo: UserRepoDependence):
-    return await repo.bookmarks(user_id)
+    bookmarks = await repo.bookmarks(user_id)
+    if bookmarks is None:
+        raise HTTPException(404, 'User not found')
+    return bookmarks
 
 
 @router.post('/bookmarks')
@@ -52,8 +58,8 @@ async def add_to_bookmarks(
 ):
     try:
         await repo.add_bookmark(user_id, movie_id)
-    except EntityDoesNotExist:
-        return JSONResponse({'detail': 'User does not exist'}, status_code=status.HTTP_400_BAD_REQUEST)
+    except EntityDoesNotExist as e:
+        return JSONResponse({'detail': str(e)}, status_code=status.HTTP_404_NOT_FOUND)
     return JSONResponse({'status': 'ok'}, status_code=status.HTTP_201_CREATED)
 
 
@@ -65,8 +71,8 @@ async def remove_from_bookmarks(
 ):
     try:
         await repo.remove_bookmark(user_id, movie_id)
-    except EntityDoesNotExist:
-        return JSONResponse({'detail': 'User does not exist'}, status_code=status.HTTP_400_BAD_REQUEST)
+    except EntityDoesNotExist as e:
+        return JSONResponse({'detail': str(e)}, status_code=status.HTTP_404_NOT_FOUND)
     return JSONResponse({'status': 'ok'}, status_code=status.HTTP_202_ACCEPTED)
 
 
@@ -77,7 +83,10 @@ async def add_review(
     text: Annotated[str, Body(...)],
     service: UserMovieServiceDependence,
 ):
-    await service.add_review(user_id, movie_id, text)
+    try:
+        await service.add_review(user_id, movie_id, text)
+    except EntityAlreadyExists as e:
+        return JSONResponse({'detail': str(e)}, status_code=status.HTTP_400_BAD_REQUEST)
     return JSONResponse({'status': 'ok'}, status_code=status.HTTP_201_CREATED)
 
 
@@ -88,8 +97,11 @@ async def update_review(
     text: Annotated[str, Body(...)],
     service: UserMovieServiceDependence,
 ):
-    await service.update_review(user_id, movie_id, text)
-    return JSONResponse({'status': 'ok'}, status_code=status.HTTP_200_OK)
+    try:
+        await service.update_review(user_id, movie_id, text)
+    except EntityDoesNotExist as e:
+        return JSONResponse({'detail': str(e)}, status_code=status.HTTP_400_BAD_REQUEST)
+    return JSONResponse({'status': 'ok'}, status_code=status.HTTP_202_ACCEPTED)
 
 
 @router.delete('/reviews')
