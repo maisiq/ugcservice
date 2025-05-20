@@ -130,7 +130,7 @@ jobs:
       - name: Start containers
         run: |
           docker compose --profile run -f docker-compose.yml down
-          docker compose -d --profile run -f docker-compose.yml up --pull missing
+          docker compose --profile run -f docker-compose.yml up --pull missing -d
       - name: Test API
         run: |
           # Начальная инициализация
