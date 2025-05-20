@@ -3,9 +3,14 @@ name = "ugcservice"
 version = "0.1.0"
 description = "UGC service for Movies App"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.11.9"
 dependencies = [
-    "aiokafka>=0.12.0"
+    "aiokafka>=0.12.0",
+    "faker>=37.0.0",
+    "flake8>=7.1.2",
+    "pydantic-settings>=2.9.1",
+    "pytest-asyncio>=0.25.3",
+    "pytest>=8.3.5",
 ]
 
 [project.optional-dependencies]
@@ -18,4 +23,11 @@ app = [
 ]
 consumer = [
     "clickhouse-connect>=0.8.13"
+]
+test = [
+    "httpx>=0.28.1",
+    "mongomock-motor>=0.0.35",
+    "mongomock>=4.3.0",
+    "pymongo-inmemory>=0.5.0",
+    "pytest-mongo>=3.2.0",
 ]
