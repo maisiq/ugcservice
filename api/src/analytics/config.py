@@ -1,6 +1,6 @@
 from enum import Enum
 
-from pydantic import field_validator
+from pydantic import computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -10,24 +10,14 @@ class Topics(Enum):
 
 class KafkaConfig(BaseSettings):
     CONSUMER_GROUP_ID: str = 'analytics'
-    BOOTSTRAP_SERVERS: list[str]
 
     SERVER0: str
     SERVER1: str
     SERVER2: str
 
-    @field_validator("BOOTSTRAP_SERVERS", mode="before")
-    def assemble_bootstrap_servers(cls, v, values):
-        if v is not None:
-            return v  # Если BOOTSTRAP_SERVERS передано явно
-
-        servers = []
-        for i in range(3):
-            server_key = f"SERVER{i}"
-            if server_key in values:
-                servers.append(values[server_key])
-
-        return servers if servers else None
+    @computed_field
+    def BOOTSTRAP_SERVERS(self) -> list[str]:
+        return [self.SERVER0, self.SERVER1, self.SERVER2]
 
     model_config = SettingsConfigDict(
         env_file='.env',
