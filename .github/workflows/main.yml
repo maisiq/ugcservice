@@ -122,6 +122,7 @@ jobs:
           echo KAFKA_SERVER2=kafka2:9094 >> .env
           echo ELASTIC_USER=elastic >> ./ELK/elasticsearch/.env
           echo ELASTIC_PASSWORD=example >> ./ELK/elasticsearch/.env
+          mkdir ./ELK/kibana/secrets && mkdir ./ELK/logstash/secrets
           echo testpassword > ./ELK/kibana/secrets/es_password.txt
           echo kibana_system > ./ELK/kibana/secrets/es_username.txt
           echo elastic > ./ELK/logstash/secrets/es_user.txt
