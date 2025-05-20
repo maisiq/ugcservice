@@ -26,6 +26,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TEST_DB_URI: mongodb://localhost:27017/?directConnection=true
+      KAFKA_SERVER0: ''
+      KAFKA_SERVER1: ''
+      KAFKA_SERVER2: ''
     steps:
       - name: Start Test MongoDB
         run: >-
