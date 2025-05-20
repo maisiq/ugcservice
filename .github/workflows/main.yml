@@ -60,7 +60,7 @@ jobs:
     needs: test-api
     outputs:
       API_DOCKER_IMAGE: ${{ steps.build_api_image.outputs.API_DOCKER_IMAGE }}
-      CONSUMER_DOCKER_IMAGE: ${{ steps.build_api_image.outputs.CONSUMER_DOCKER_IMAGE }}
+      CONSUMER_DOCKER_IMAGE: ${{ steps.build_consumer_image.outputs.CONSUMER_DOCKER_IMAGE }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -72,13 +72,13 @@ jobs:
         id: build_api_image
         run: |
           API_DOCKER_IMAGE=${{ env.DOCKER_IMAGE_BASE }}/api:${{ hashFiles(format('./api/requirements/api.{0}.txt', env.BUILD)) }}
-          echo $API_DOCKER_IMAGE | tee -a $GITHUB_OUTPUT $GITHUB_ENV
+          echo API_DOCKER_IMAGE=$API_DOCKER_IMAGE | tee -a $GITHUB_OUTPUT $GITHUB_ENV
           docker build --build-arg BUILD=${{ env.BUILD }} -t $API_DOCKER_IMAGE ./api/
       - name: Build Consumer image
         id: build_consumer_image
         run: |
           CONSUMER_DOCKER_IMAGE=${{ env.DOCKER_IMAGE_BASE }}/consumer:${{ hashFiles(format('./ETL/requirements/consumer.{0}.txt', env.BUILD)) }}
-          echo $CONSUMER_DOCKER_IMAGE | tee -a $GITHUB_OUTPUT $GITHUB_ENV
+          echo CONSUMER_DOCKER_IMAGE=$CONSUMER_DOCKER_IMAGE | tee -a $GITHUB_OUTPUT $GITHUB_ENV
           docker build --build-arg BUILD=${{env.BUILD}} -t $CONSUMER_DOCKER_IMAGE ./ETL/
       - name: Login to CR
         run: echo ${{ env.CR_TOKEN }} | docker login --username ${{ env.CR_USER }} --password-stdin ${{ env.CONTAINER_REGISTRY }}
