@@ -11,12 +11,15 @@ x-properties: &props
     timeout: 30s
     retries: 5
     start_period: 1m
-
+  profiles:
+    - mongo_cluster
+    - api
+    - run
 
 services:
   mongo-init:
-    image: sha256:bf21d82156cea300963bc2fce6fb2c419e67eb3c21d8781a602da8546829cf65
-    command: ./tmp/init.sh
+    <<: *props
+    command: ["/bin/bash", "/tmp/init.sh"]
     depends_on:
       - mongos1
     volumes:
@@ -97,7 +100,7 @@ services:
     <<: *props
     container_name: mongos1
     command: >
-      bash -c "mongos --configdb mongors1conf/mongocfg1:27017,mongocfg2:27017,mongocfg3:27017 
+      bash -c "mongos --configdb mongors1conf/mongocfg1:27017,mongocfg2:27017,mongocfg3:27017
       --port $$MONGO_PORT
       --bind_ip_all"
     depends_on:
@@ -112,8 +115,10 @@ services:
     <<: *props
     container_name: mongos2
     command: >
-      bash -c "
-      mongos --configdb mongors1conf/mongocfg1:27017,mongocfg2:27017,mongocfg3:27017 
+      bash -c "mongos --configdb mongors1conf/mongocfg1:27017,mongocfg2:27017,mongocfg3:27017
       --port $$MONGO_PORT 
       --bind_ip_all"
+    depends_on:
+      mongos1:
+        condition: service_healthy
   
