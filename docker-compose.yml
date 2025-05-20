@@ -31,7 +31,40 @@ services:
     profiles:
       - api
       - run
-
+  tests:
+    container_name: api_tests
+    image: ${API_DOCKER_IMAGE}
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    command: /bin/bash -c "pip install -q -r ./requirements/api.test.txt && pytest"
+    environment:
+      - TEST_DB_URI=mongodb://test_db:27017/?directConnection=true
+    volumes:
+      - ./api/:/app/
+    depends_on:
+      test_db:
+        condition: service_healthy
+    profiles:
+      - test
+  test_db:
+    container_name: api_test_mongodb
+    image: mongo:8.0.1@sha256:9342a9279a9841fc5f8192e49dcaaf9404e6bb3a90e8cf134eb96074830dd448
+    command: /app/initdb.sh
+    volumes:
+      - type: bind
+        source: ./api/tests/test_db_init.sh
+        target: /app/initdb.sh
+    logging:
+      driver: "none"
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.runCommand('ping').ok"]
+      interval: 15s
+      timeout: 30s
+      retries: 5
+      start_period: 15s
+    profiles:
+      - test
   consumer:
     container_name: analytics_events_consumer
     image: ${CONSUMER_DOCKER_IMAGE:?Consumer docker image name is required}
