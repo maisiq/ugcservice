@@ -1,5 +1,9 @@
 name: ugc_service_elk
 
+x-common: &props
+  profiles:
+    - elk_stack
+    - run
 
 services:
   elasticsearch:
@@ -14,6 +18,7 @@ services:
     secrets:
       - kibana_es_pw
       - kibana_es_username
+    <<: *props
 
   kibana:
     container_name: ugc_kibana
@@ -31,6 +36,7 @@ services:
     secrets:
       - kibana_es_pw
       - kibana_es_username
+    <<: *props
 
   
   filebeat_nginx:
@@ -43,6 +49,7 @@ services:
     depends_on:
       nginx: 
         condition: service_started
+    <<: *props
 
   logstash:
     container_name: logstash
@@ -58,6 +65,7 @@ services:
       - logstash_es_user
       - logstash_es_password
     command: ["/start.sh"]
+    <<: *props
 
 secrets:
   kibana_es_pw:
