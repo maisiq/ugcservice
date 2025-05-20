@@ -59,8 +59,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: test-api
     outputs:
-      API_DOCKER_IMAGE: ${{ steps.build_api_image.outputs.API_DOCKER_IMAGE }}
-      CONSUMER_DOCKER_IMAGE: ${{ steps.build_consumer_image.outputs.CONSUMER_DOCKER_IMAGE }}
+      API_DOCKER_IMAGE: ${{ steps.api-image-output.outputs.API_DOCKER_IMAGE }}
+      CONSUMER_DOCKER_IMAGE: ${{ steps.consumer-image-output.outputs.CONSUMER_DOCKER_IMAGE }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -68,17 +68,20 @@ jobs:
             api
             ETL
           sparse-checkout-cone-mode: true
-      - name: Build API image
-        id: build_api_image
+      - name: Set output for API image
+        id: api-image-output
         run: |
           API_DOCKER_IMAGE=${{ env.DOCKER_IMAGE_BASE }}/api:${{ hashFiles(format('./api/requirements/api.{0}.txt', env.BUILD)) }}
           echo API_DOCKER_IMAGE=$API_DOCKER_IMAGE | tee -a $GITHUB_OUTPUT $GITHUB_ENV
-          docker build --build-arg BUILD=${{ env.BUILD }} -t $API_DOCKER_IMAGE ./api/
-      - name: Build Consumer image
-        id: build_consumer_image
+      - name: Build API image
+        run: docker build --build-arg BUILD=${{ env.BUILD }} -t $API_DOCKER_IMAGE ./api/
+      - name: Set output for API image
+        id: consumer-image-output
         run: |
           CONSUMER_DOCKER_IMAGE=${{ env.DOCKER_IMAGE_BASE }}/consumer:${{ hashFiles(format('./ETL/requirements/consumer.{0}.txt', env.BUILD)) }}
           echo CONSUMER_DOCKER_IMAGE=$CONSUMER_DOCKER_IMAGE | tee -a $GITHUB_OUTPUT $GITHUB_ENV
+      - name: Build Consumer image
+        run: |
           docker build --build-arg BUILD=${{env.BUILD}} -t $CONSUMER_DOCKER_IMAGE -f "ETL/Dockerfile.etl" ./ETL
       - name: Login to CR
         run: echo ${{ env.CR_TOKEN }} | docker login --username ${{ env.CR_USER }} --password-stdin ${{ env.CONTAINER_REGISTRY }}
@@ -105,6 +108,6 @@ jobs:
       - name: Start containers
         run: |
           docker compose -f docker-compose.yml down
-          docker compose -f docker-compose.yml up --pull
+          docker compose -f docker-compose.yml up --pull missing
       - name: Test API
         run: curl http://localhost:80/docs # postman tests?
