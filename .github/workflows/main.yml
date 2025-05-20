@@ -130,6 +130,14 @@ jobs:
       - name: Start containers
         run: |
           docker compose --profile run -f docker-compose.yml down
-          docker compose --profile run -f docker-compose.yml up --pull missing
+          docker compose -d --profile run -f docker-compose.yml up --pull missing
       - name: Test API
-        run: curl http://localhost:80/docs # postman tests?
+        run: |
+          # Начальная инициализация
+          sleep 30
+          # Проверка состояния UGC Service
+          until curl http://localhost:80/docs > /dev/null 2>&1; do
+            echo "Waiting for UGC Service..."
+            sleep 2
+          done
+          curl http://localhost:80/docs # postman tests?
