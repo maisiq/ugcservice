@@ -1,0 +1,11 @@
+-r api.dev.txt
+
+pytest>=8.3.5
+pytest-asyncio>=0.25.3
+faker>=37.0.0
+httpx>=0.28.1
+mongomock-motor>=0.0.35
+mongomock>=4.3.0
+pymongo-inmemory>=0.5.0
+pytest-mongo>=3.2.0
+flake8>=7.1.2
