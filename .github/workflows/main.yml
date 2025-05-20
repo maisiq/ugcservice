@@ -26,9 +26,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TEST_DB_URI: mongodb://localhost:27017/?directConnection=true
-      KAFKA_SERVER0: 'kafka0:9094'
-      KAFKA_SERVER1: 'kafka1:9094'
-      KAFKA_SERVER2: 'kafka2:9094'
+      KAFKA_SERVER0: kafka0:9094
+      KAFKA_SERVER1: kafka1:9094
+      KAFKA_SERVER2: kafka2:9094
     steps:
       - name: Start Test MongoDB
         run: >-
@@ -49,7 +49,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install Testing Dependencies
-        run: pip install -r ./api/requirements/api.test.txt
+        run: pip install -q -r ./api/requirements/api.test.txt
       - name: Lint with flake8
         continue-on-error: true
         run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --verbose
@@ -79,7 +79,7 @@ jobs:
         run: |
           CONSUMER_DOCKER_IMAGE=${{ env.DOCKER_IMAGE_BASE }}/consumer:${{ hashFiles(format('./ETL/requirements/consumer.{0}.txt', env.BUILD)) }}
           echo CONSUMER_DOCKER_IMAGE=$CONSUMER_DOCKER_IMAGE | tee -a $GITHUB_OUTPUT $GITHUB_ENV
-          docker build --build-arg BUILD=${{env.BUILD}} -t $CONSUMER_DOCKER_IMAGE -f ./ETL/Dockerfile.etl
+          docker build --build-arg BUILD=${{env.BUILD}} -t $CONSUMER_DOCKER_IMAGE -f "ETL/Dockerfile.etl" ./ETL
       - name: Login to CR
         run: echo ${{ env.CR_TOKEN }} | docker login --username ${{ env.CR_USER }} --password-stdin ${{ env.CONTAINER_REGISTRY }}
       - name: Push image to CR
