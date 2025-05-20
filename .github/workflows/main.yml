@@ -54,8 +54,6 @@ jobs:
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('./api/requirements/api.test.txt') }}
-      - name: Debug step
-        run: ls -la ~/.cache/pip && ls -la ~/.cache/pip/wheels
       - name: Install Testing Dependencies
         # if: steps.cache-api-deps.outputs.cache-hit != 'true'
         run: pip install -r ./api/requirements/api.test.txt
