@@ -9,7 +9,9 @@ x-kafka: &common
     interval: 15s
     start_period: 30s
     retries: 5
-
+  profiles:
+    - kafka_cluster
+    - run
 
 services:
   kafka0:
