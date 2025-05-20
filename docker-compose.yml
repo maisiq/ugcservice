@@ -17,8 +17,6 @@ services:
     command: ["uvicorn", "--reload", "--host", "0.0.0.0", "--port", "${APP_PORT:-8000}", "--workers", "3", "src.main:app"]
     volumes:
       - ./api/:/app/
-    expose:
-      - 8000
     env_file:
       - ./.env
     logging:
@@ -28,9 +26,11 @@ services:
         tag: 'api'
     healthcheck:
       test: curl -sS localhost:8000 > /dev/null && exit 0 || exit 1
-      # test: curl -sSf localhost:8000/ping > /dev/null && exit 0 || exit 1
       interval: 5s
       retries: 5
+    profiles:
+      - api
+      - run
 
   consumer:
     container_name: analytics_events_consumer
@@ -47,6 +47,9 @@ services:
         condition: service_healthy
       clickhouse:
         condition: service_healthy
+    profiles:
+      - kafka_cluster
+      - run
 
   nginx:
     image: nginx:1.27.0-alpine
@@ -59,6 +62,9 @@ services:
     ports:
       - 80:80
     restart: unless-stopped
+    profiles:
+      - api
+      - run
 
   clickhouse:
     container_name: clickhouse-server
@@ -78,6 +84,9 @@ services:
       timeout: 30s
       retries: 5
       start_period: 30s
+    profiles:
+      - kafka_cluster
+      - run
 
 configs:
   nginx_conf:
