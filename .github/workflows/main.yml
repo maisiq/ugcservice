@@ -54,8 +54,10 @@ jobs:
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('./api/requirements/api.test.txt') }}
+      - name: Debug step
+        run: ls -la ~/.cache/pip
       - name: Install Testing Dependencies
-        if: steps.cache-api-deps.outputs.cache-hit != 'true'
+        # if: steps.cache-api-deps.outputs.cache-hit != 'true'
         run: pip install -q -r ./api/requirements/api.test.txt
       - name: Lint with flake8
         continue-on-error: true
