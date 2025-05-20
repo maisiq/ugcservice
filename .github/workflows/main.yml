@@ -24,17 +24,13 @@ env:
 jobs:
   test-api:
     runs-on: ubuntu-latest
-    services:
-      mongodb:
-        image: mongo:8.0.1@sha256:9342a9279a9841fc5f8192e49dcaaf9404e6bb3a90e8cf134eb96074830dd448
-        ports:
-          - 27017:27017
-        options: >-
-          --replSet rs0 
-          --bind_ip_all
     env:
-      TEST_DB_URI: mongodb://mongodb:27017/?directConnection=true
+      TEST_DB_URI: mongodb://localhost:27017/?directConnection=true
     steps:
+      - name: Start Test MongoDB
+        run: >-
+          docker run -d -p 27017:27017 --name mongodb mongo:8.0.1@sha256:9342a9279a9841fc5f8192e49dcaaf9404e6bb3a90e8cf134eb96074830dd448
+          mongod --replSet rs0 --bind_ip_all --port 27017
       - name: Initialize replica set
         run: |
           # Ожидаем запуска MongoDB
