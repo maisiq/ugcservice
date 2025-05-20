@@ -1,12 +1,6 @@
 #!/bin/bash
 set -e  # Прерывать выполнение скрипта при ошибке
 
-# Установка необходимых пакетов
-apt-get update && apt-get install -y wget
-wget -qO- https://www.mongodb.org/static/pgp/server-8.0.asc | tee /etc/apt/trusted.gpg.d/server-8.0.asc
-echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu noble/mongodb-org/8.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-8.0.list
-apt-get update && apt-get install -y mongodb-mongosh
-
 # Определение переменных
 RS1_SERVER="mongors1n3"
 RS2_SERVER="mongors2n3"
