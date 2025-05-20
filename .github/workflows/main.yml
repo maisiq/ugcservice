@@ -46,7 +46,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install Testing Dependencies
-        run: pip install -r ./api/requirements/api.${{ env.BUILD }}.txt
+        run: pip install -r ./api/requirements/api.test.txt
       - name: Lint with flake8
         continue-on-error: true
         run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --verbose
