@@ -6,8 +6,8 @@ x-kafka: &common
     dockerfile: Dockerfile.kafka
   healthcheck:
     test: ["CMD", "kafka-broker-api-versions.sh", "--bootstrap-server", "localhost:9094"]
-    interval: 5s
-    start_period: 5s
+    interval: 15s
+    start_period: 30s
     retries: 5
 
 
