@@ -79,7 +79,7 @@ jobs:
         run: |
           CONSUMER_DOCKER_IMAGE=${{ env.DOCKER_IMAGE_BASE }}/consumer:${{ hashFiles(format('./ETL/requirements/consumer.{0}.txt', env.BUILD)) }}
           echo CONSUMER_DOCKER_IMAGE=$CONSUMER_DOCKER_IMAGE | tee -a $GITHUB_OUTPUT $GITHUB_ENV
-          docker build --build-arg BUILD=${{env.BUILD}} -t $CONSUMER_DOCKER_IMAGE ./ETL/
+          docker build --build-arg BUILD=${{env.BUILD}} -t $CONSUMER_DOCKER_IMAGE -f ./ETL/Dockerfile.etl
       - name: Login to CR
         run: echo ${{ env.CR_TOKEN }} | docker login --username ${{ env.CR_USER }} --password-stdin ${{ env.CONTAINER_REGISTRY }}
       - name: Push image to CR
