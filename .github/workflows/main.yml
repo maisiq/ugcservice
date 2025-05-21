@@ -1,7 +1,5 @@
 name: Deploy pipeline
 
-# cache-from
-# поменять tag у образов, хэш от зависимостей - фигня
 on:
   push:
     branches: [ "master" ]
@@ -58,7 +56,6 @@ jobs:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('./api/requirements/api.test.txt') }}
       - name: Install Testing Dependencies
-        # if: steps.cache-api-deps.outputs.cache-hit != 'true'
         run: pip install -r ./api/requirements/api.test.txt
       - name: Lint with flake8
         continue-on-error: true
