@@ -94,7 +94,7 @@ jobs:
       - name: Build and push Consumer image
         uses: docker/build-push-action@v6
         with:
-          context: ./api/
+          context: ./ETL/
           file: ETL/Dockerfile.etl
           push: true
           tags: ${{ env.CONSUMER_DOCKER_IMAGE }}
