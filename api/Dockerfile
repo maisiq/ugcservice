@@ -1,4 +1,4 @@
-FROM python:3.12.8-bullseye as python
+FROM python:3.12.8-bullseye AS python
 
 # RUN apt-get update && apt-get install -y gcc
 
