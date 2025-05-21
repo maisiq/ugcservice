@@ -1,3 +1,0 @@
-rs.initiate({_id: mongors2, members: [{_id: 0, host: "localhost:27040"}, {_id: 1, host: "localhost:27050"}, {_id: 2, host: "localhost:27060"}]})
-
-rs.initiate({_id: mongors1conf, members: [{_id: 0, host: "localhost:27070"}, {_id: 1, host: "localhost:27080"}, {_id: 2, host: "localhost:27090"}]})
