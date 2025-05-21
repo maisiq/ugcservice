@@ -84,6 +84,10 @@ jobs:
           echo API_DOCKER_IMAGE=$API_DOCKER_IMAGE | tee -a $GITHUB_OUTPUT $GITHUB_ENV
       - name: Login to CR
         run: echo ${{ env.CR_TOKEN }} | docker login --username ${{ env.CR_USER }} --password-stdin ${{ env.CONTAINER_REGISTRY }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: network=host
       - name: Build and push API image
         uses: docker/build-push-action@v6
         with:
