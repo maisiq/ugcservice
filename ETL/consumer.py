@@ -4,7 +4,7 @@ import json
 from aiokafka import AIOKafkaConsumer
 import clickhouse_connect
 
-from .config import kafka_config, ch_config, Topics
+from config import kafka_config, ch_config, Topics
 
 
 async def load_data(data: dict):
