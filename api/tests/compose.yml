@@ -1,0 +1,43 @@
+name: ugc_local_testing
+
+services:
+  tests:
+    container_name: api_tests
+    image: ${API_DOCKER_IMAGE}
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    command: /bin/bash -c "pip install -q -r ../requirements/api.test.txt && pytest"
+    environment:
+      TEST_DB_URI: mongodb://root:example@test_db:27017/?directConnection=true&authSource=admin
+      KAFKA_SERVER0: 'stub-for-now' # project has no tests for events endpoints yet
+      KAFKA_SERVER1: 'stub-for-now'
+      KAFKA_SERVER2: 'stub-for-now'
+    volumes:
+      - ./api/:/app/
+    depends_on:
+      test_db:
+        condition: service_healthy
+    profiles:
+      - test
+  test_db:
+    container_name: api_test_mongodb
+    image: mongo:8.0.1@sha256:9342a9279a9841fc5f8192e49dcaaf9404e6bb3a90e8cf134eb96074830dd448
+    command: /app/initdb.sh
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    volumes:
+      - type: bind
+        source: ./test_db_init.sh
+        target: /app/initdb.sh
+    logging:
+      driver: "none"
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.runCommand('ping').ok"]
+      interval: 15s
+      timeout: 30s
+      retries: 5
+      start_period: 15s
+    profiles:
+      - test
