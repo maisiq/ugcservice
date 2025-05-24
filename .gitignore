@@ -5,3 +5,4 @@ __pycache__/
 tmp/
 *_user*
 *_password*
+secrets

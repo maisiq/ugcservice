@@ -126,6 +126,9 @@ jobs:
           echo kibana_system > ./ELK/kibana/secrets/es_username.txt
           echo elastic > ./ELK/logstash/secrets/es_user.txt
           echo example > ./ELK/logstash/secrets/es_password.txt
+          mkdir ./mongo_cluster/secrets
+          echo root > ./mongo_cluster/secrets/root-user.txt
+          echo example > ./mongo_cluster/secrets/root-pwd.txt
       - name: Start containers
         run: |
           docker compose --profile run -f docker-compose.yml down
@@ -139,4 +142,4 @@ jobs:
             echo "Waiting for UGC Service..."
             sleep 2
           done
-          curl http://localhost:80/docs # postman tests?
+          docker compose ps
