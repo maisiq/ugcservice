@@ -1,10 +1,11 @@
 name: ugc_service_mongo_cluster
 
+volumes:
+  mongo-keyfile:
+    name: ugc-mongo-keyfile
+
 x-properties: &props
   image: mongo:8.0.1@sha256:9342a9279a9841fc5f8192e49dcaaf9404e6bb3a90e8cf134eb96074830dd448
-  environment:
-    - MONGO_PORT=27017
-    - MONGO_DB_PATH=/data/db
   healthcheck:
     test: ["CMD", "mongosh", "--eval", "db.runCommand('ping').ok"]
     interval: 1m
@@ -17,108 +18,119 @@ x-properties: &props
     - run
 
 services:
-  mongo-init:
-    <<: *props
-    command: ["/bin/bash", "/tmp/init.sh"]
-    depends_on:
-      - mongos1
+  mongo-setup:
+    image: alpine:3.21.3
     volumes:
-      - ./init/init.sh:/tmp/init.sh
+      - mongo-keyfile:/keys:rw
+    command: |
+      /bin/sh -c "apk add --no-cache openssl
+      openssl rand -base64 756 > /keys/mongo-keyfile
+      chmod 600 /keys/mongo-keyfile
+      chown 999:999 /keys/mongo-keyfile"
 
   mongors1n1:
     <<: *props
     container_name: mongors1n1
-    command: >
-      bash -c "
-      mongod --shardsvr 
-      --replSet mongors1 
-      --dbpath $$MONGO_DB_PATH
-      --port $$MONGO_PORT
-      --bind_ip_all"
+    command: /initdb.sh
+    volumes:
+      - mongo-keyfile:/keys/:ro
+      - ./init/rs1.sh:/initdb.sh
+    secrets:
+      - mongo-root-user
+      - mongo-root-pwd
+    depends_on:
+      mongo-setup:
+        condition: service_completed_successfully
   mongors1n2:
     extends: mongors1n1
+    command: >-
+      mongod --shardsvr
+      --replSet mongors1
+      --dbpath /data/db
+      --port 27017
+      --bind_ip_all
+      --auth
+      --keyFile /keys/mongo-keyfile
     container_name: mongors1n2
+    volumes:
+      - mongo-keyfile:/keys/:ro
 
   mongors1n3:
-    extends: mongors1n1
+    extends: mongors1n2
     container_name: mongors1n3
-    depends_on:
-      mongors1n1:
-        condition: service_healthy
-      mongors1n2:
-        condition: service_healthy
 
   mongors2n1:
     <<: *props
     container_name: mongors2n1
-    command: >
-      bash -c "
-      mongod --shardsvr 
-      --replSet mongors2 
-      --dbpath $$MONGO_DB_PATH
-      --port $$MONGO_PORT
-      --bind_ip_all"
+    command: /initdb.sh
+    volumes:
+      - mongo-keyfile:/keys/:ro
+      - ./init/rs2.sh:/initdb.sh
+    secrets:
+      - mongo-root-user
+      - mongo-root-pwd
+    depends_on:
+      mongo-setup:
+        condition: service_completed_successfully
 
   mongors2n2:
     extends: mongors2n1
     container_name: mongors2n2
+    command: >-
+      mongod --shardsvr
+      --replSet mongors2
+      --dbpath /data/db
+      --port 27017
+      --bind_ip_all
+      --auth
+      --keyFile /keys/mongo-keyfile
 
   mongors2n3:
-    extends: mongors2n1
+    extends: mongors2n2
     container_name: mongors2n3
-    depends_on:
-      mongors2n1:
-        condition: service_healthy
-      mongors2n2:
-        condition: service_healthy
 
   mongocfg1:
     <<: *props
     container_name: mongocfg1
-    command: >
-      bash -c "
-      mongod --configsvr 
-      --replSet mongors1conf 
-      --dbpath $$MONGO_DB_PATH
-      --port $$MONGO_PORT
-      --bind_ip_all"
+    command: /initdb.sh
+    volumes:
+      - mongo-keyfile:/keys/:ro
+      - ./init/cfg.sh:/initdb.sh
+    depends_on:
+      mongo-setup:
+        condition: service_completed_successfully
 
   mongocfg2:
     extends: mongocfg1
     container_name: mongocfg2
+    command: >-
+      mongod --configsvr
+      --replSet mongors1conf
+      --port 27017
+      --bind_ip_all
+      --auth
+      --keyFile /keys/mongo-keyfile
 
   mongocfg3:
-    extends: mongocfg1
+    extends: mongocfg2
     container_name: mongocfg3
-    depends_on:
-      mongocfg1:
-        condition: service_healthy
-      mongocfg2:
-        condition: service_healthy
 
   mongos1:
     <<: *props
     container_name: mongos1
-    command: >
-      bash -c "mongos --configdb mongors1conf/mongocfg1:27017,mongocfg2:27017,mongocfg3:27017
-      --port $$MONGO_PORT
-      --bind_ip_all"
-    depends_on:
-      mongors1n3:
-        condition: service_healthy
-      mongors2n3:
-        condition: service_healthy
-      mongocfg3:
-        condition: service_healthy
+    command: /initdb.sh
+    volumes:
+      - mongo-keyfile:/keys/:ro
+      - ./init/mongos.sh:/initdb.sh
+    secrets:
+      - mongo-root-user
+      - mongo-root-pwd
 
   mongos2:
-    <<: *props
+    extends: mongos1
     container_name: mongos2
-    command: >
-      bash -c "mongos --configdb mongors1conf/mongocfg1:27017,mongocfg2:27017,mongocfg3:27017
-      --port $$MONGO_PORT 
-      --bind_ip_all"
-    depends_on:
-      mongos1:
-        condition: service_healthy
-  
+    command: >-
+      mongos --configdb mongors1conf/mongocfg1:27017,mongocfg2:27017,mongocfg3:27017
+      --port 27017
+      --bind_ip_all
+      --keyFile /keys/mongo-keyfile
