@@ -1,10 +1,10 @@
 import asyncio
-import json
 
 from aiokafka import AIOKafkaConsumer
 import clickhouse_connect
 
 from config import kafka_config, ch_config, Topics
+from models import AnalyticEvent
 
 
 async def load_data(data: dict):
@@ -19,7 +19,8 @@ async def load_data(data: dict):
 
 
 def deserializer(data: bytes) -> dict:
-    return json.loads(data)
+    event = AnalyticEvent.model_validate_json(data)
+    return event.model_dump()
 
 
 async def consume():
