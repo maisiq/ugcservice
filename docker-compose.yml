@@ -72,6 +72,8 @@ services:
   clickhouse:
     container_name: clickhouse-server
     image: clickhouse:25.5.1
+    env_file:
+      - ./clickhouse/.env  # CLICKHOUSE_USER & CLICKHOUSE_PASSWORD
     ports:
       - 18123:8123
       - 19000:9000
