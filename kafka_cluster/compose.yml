@@ -21,6 +21,7 @@ services:
       - KAFKA_CFG_NODE_ID=0
       - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka0:9092,EXTERNAL://kafka0:9094
       - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka0:9093,1@kafka1:9093,2@kafka2:9093
+      - KAFKA_CREATE_TOPICS=analytics:3:2
 
   kafka1:
     <<: *common
