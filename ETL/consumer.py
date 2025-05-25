@@ -1,10 +1,15 @@
 import asyncio
+import logging
 
 from aiokafka import AIOKafkaConsumer
 import clickhouse_connect
+from pydantic import ValidationError
 
 from config import kafka_config, ch_config, Topics
 from models import AnalyticEvent
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 async def load_data(data: dict):
@@ -15,7 +20,7 @@ async def load_data(data: dict):
         password=ch_config.PASSWORD,
     )
     result = await ch_client.insert(ch_config.ANALYTICS_TABLE, [list(data.values())], list(data.keys()))
-    print(result.summary)
+    logger.debug(result.summary)
 
 
 def deserializer(data: bytes) -> dict:
@@ -32,10 +37,14 @@ async def consume():
     )
     async with consumer as c:
         async for msg in c:
-            print("consumed: ", msg.topic, msg.partition, msg.offset, msg.key, msg.value, msg.timestamp)
-            data = deserializer(msg.value)
-            await load_data(data)
-            await consumer.commit()
+            logger.debug("consumed: ", msg.topic, msg.partition, msg.offset, msg.key, msg.value, msg.timestamp)
+            try:
+                data = deserializer(msg.value)
+            except ValidationError as e:
+                logger.error(e)
+            else:
+                await load_data(data)
+                await consumer.commit()
 
 
 asyncio.run(consume())
