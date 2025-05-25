@@ -8,7 +8,12 @@ from config import kafka_config, ch_config, Topics
 
 
 async def load_data(data: dict):
-    ch_client = await clickhouse_connect.get_async_client(host=ch_config.HOST, port=ch_config.PORT)
+    ch_client = await clickhouse_connect.get_async_client(
+        host=ch_config.HOST,
+        port=ch_config.PORT,
+        username=ch_config.USER,
+        password=ch_config.PASSWORD,
+    )
     result = await ch_client.insert(ch_config.ANALYTICS_TABLE, [list(data.values())], list(data.keys()))
     print(result.summary)
 

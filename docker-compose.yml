@@ -44,7 +44,7 @@ services:
     volumes:
       - ./ETL/consumer.py:/app/consumer.py
     env_file:
-      - ./.env
+      - ./ETL/.env
     depends_on:
       kafka0:
         condition: service_healthy
@@ -71,7 +71,9 @@ services:
 
   clickhouse:
     container_name: clickhouse-server
-    image: clickhouse
+    image: clickhouse:25.5.1
+    env_file:
+      - ./clickhouse/.env  # CLICKHOUSE_USER & CLICKHOUSE_PASSWORD
     ports:
       - 18123:8123
       - 19000:9000

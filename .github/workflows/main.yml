@@ -121,6 +121,10 @@ jobs:
           echo KAFKA_SERVER2=kafka2:9094 >> .env
           echo ELASTIC_USER=elastic >> ./ELK/elasticsearch/.env
           echo ELASTIC_PASSWORD=example >> ./ELK/elasticsearch/.env
+          echo CLICKHOUSE_PASSWORD=example >> ./clickhouse/.env
+          echo CLICKHOUSE_USER=root >> ./clickhouse/.env
+          echo CLICKHOUSE_PASSWORD=example >> ./ETL/.env
+          echo CLICKHOUSE_USER=root >> ./ETL/.env
           mkdir ./ELK/kibana/secrets && mkdir ./ELK/logstash/secrets
           echo testpassword > ./ELK/kibana/secrets/es_password.txt
           echo kibana_system > ./ELK/kibana/secrets/es_username.txt
@@ -135,8 +139,6 @@ jobs:
           docker compose --profile run -f docker-compose.yml up --pull missing -d
       - name: Test API
         run: |
-          # Начальная инициализация
-          sleep 30
           # Проверка состояния UGC Service
           until curl http://localhost:80/docs > /dev/null 2>&1; do
             echo "Waiting for UGC Service..."
