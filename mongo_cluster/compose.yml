@@ -27,6 +27,10 @@ services:
       openssl rand -base64 756 > /keys/mongo-keyfile
       chmod 600 /keys/mongo-keyfile
       chown 999:999 /keys/mongo-keyfile"
+    profiles:
+      - mongo_cluster
+      - api
+      - run
 
   mongors1n1:
     <<: *props
