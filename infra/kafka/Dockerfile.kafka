@@ -1,4 +1,4 @@
-FROM bitnami/kafka:latest
+FROM bitnami/kafka:4.0.0
 
 ENV KAFKA_KRAFT_CLUSTER_ID=abcdefghijklmnopqrstuv
 
