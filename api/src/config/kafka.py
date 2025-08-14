@@ -8,7 +8,7 @@ class Topics(Enum):
     analytics = 'analytics'
 
 
-class KafkaConfig(BaseSettings):
+class _KafkaConfig(BaseSettings):
     CONSUMER_GROUP_ID: str = 'analytics'
 
     SERVER0: str
@@ -26,4 +26,4 @@ class KafkaConfig(BaseSettings):
     )
 
 
-kafka_config = KafkaConfig()
+kafka_config = _KafkaConfig()

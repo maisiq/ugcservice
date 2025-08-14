@@ -1,7 +1,6 @@
 from motor.motor_asyncio import AsyncIOMotorClientSession
-
-from src.db.config import MONGO_DB, MongoCollections
-from src.core.exceptions import EntityDoesNotExist, EntityAlreadyExists
+from src.config.db import MONGO_DB, MongoCollections
+from src.core.exceptions import EntityAlreadyExists, EntityDoesNotExist
 
 
 class MongoMovieRepository:
@@ -17,17 +16,15 @@ class MongoMovieRepository:
         )
         return data.get('reviews') if data is not None else []
 
-    async def rating(self, movie_id) -> dict[str, str | None]:
+    async def rating(self, movie_id) -> float:
         data = await self._coll.find_one(
             {'_id': movie_id},
             {'_id': 0, 'rating': {'$avg': '$ratings.value'}},
             session=self._session,
         )
-        if data is not None:
-            resp = {'rating': round(data['rating'], 1)}
-        else:
-            raise EntityDoesNotExist('Movie doesnt exist')
-        return resp
+        if data is None:
+            return float()
+        return round(data['rating'], 1)
 
     async def add_review(self, user_id, movie_id, review):
         result = await self._coll.find_one(
@@ -64,6 +61,8 @@ class MongoMovieRepository:
             {'$pull': {'reviews': {'user_id': user_id}}},
             session=self._session,
         )
+        if result.modified_count == 0:
+            raise EntityDoesNotExist('There is no review with these user_id and movie_id pair')
         return result.acknowledged
 
     async def rate(self, user_id, movie_id, value):

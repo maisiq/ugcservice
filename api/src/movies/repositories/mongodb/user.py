@@ -1,6 +1,5 @@
 from motor.motor_asyncio import AsyncIOMotorClientSession
-
-from src.db.config import MONGO_DB, MongoCollections
+from src.config.db import MONGO_DB, MongoCollections
 from src.core.exceptions import EntityAlreadyExists, EntityDoesNotExist
 
 
@@ -75,7 +74,7 @@ class MongoUserRepository:
             session=self._session,
         )
         if result.matched_count == 0:
-            raise EntityDoesNotExist('There is no review with this id')
+            raise EntityDoesNotExist('There is no review with this user_id')
         return result.acknowledged
 
     async def delete_review(self, user_id, movie_id):
@@ -84,6 +83,8 @@ class MongoUserRepository:
             {'$pull': {'reviews': {'movie_id': movie_id}}},
             session=self._session,
         )
+        if result.modified_count == 0:
+            raise EntityDoesNotExist('There is no review with these user_id and movie_id pair')
         return result.acknowledged
 
     async def rate_movie(self, user_id, movie_id, value):
