@@ -29,6 +29,7 @@ services:
       - ./.env
     healthcheck:
       start_interval: 10s
+      start_period: 10s
       test: curl -sS localhost:8000/_ping > /dev/null && exit 0 || exit 1
       interval: 10s
       retries: 5
