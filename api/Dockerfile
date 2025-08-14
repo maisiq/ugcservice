@@ -16,4 +16,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD ["uvicorn", "--reload", "src.main:app"]
+CMD ["uvicorn", "--reload", "--factory", "src.main:init"]

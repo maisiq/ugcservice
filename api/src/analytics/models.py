@@ -3,7 +3,10 @@ from uuid import UUID
 from pydantic import BaseModel
 
 
-class ViewMessage(BaseModel):
-    user_id: UUID
+class View(BaseModel):
     movie_id: str
     timestamp_ms: int
+
+
+class ViewMessage(View):
+    user_id: UUID

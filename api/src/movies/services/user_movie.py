@@ -1,5 +1,7 @@
-from src.movies.repositories.protocols import MovieRepository, UserRepository
 from src.core.protocols import UOW
+from src.movies.repositories.protocols import MovieRepository, UserRepository
+
+from .utils import filter_text
 
 
 class MongoUserMovieService:
@@ -9,15 +11,19 @@ class MongoUserMovieService:
         self._movie_repo = movie_repo
 
     async def add_review(self, user_id, movie_id, review):
+        filtered_text = filter_text(review)
+
         async with self._uow as uow:
-            await self._user_repo.add_review(user_id, movie_id, review)
-            await self._movie_repo.add_review(user_id, movie_id, review)
+            await self._user_repo.add_review(user_id, movie_id, filtered_text)
+            await self._movie_repo.add_review(user_id, movie_id, filtered_text)
             await uow.commit()
 
     async def update_review(self, user_id, movie_id, review):
+        filtered_text = filter_text(review)
+
         async with self._uow as uow:
-            await self._user_repo.update_review(user_id, movie_id, review)
-            await self._movie_repo.update_review(user_id, movie_id, review)
+            await self._user_repo.update_review(user_id, movie_id, filtered_text)
+            await self._movie_repo.update_review(user_id, movie_id, filtered_text)
             await uow.commit()
 
     async def delete_review(self, user_id, movie_id):

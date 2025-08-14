@@ -5,10 +5,9 @@ import pytest
 import pytest_asyncio
 from faker import Faker
 from motor.motor_asyncio import AsyncIOMotorClient
-
-from src.movies.repositories.mongodb import movie, user
-from src.services.user_movie import MongoUserMovieService
 from src.core.uow import MongoUOW
+from src.movies.dependencies import MongoUserMovieService
+from src.movies.repositories.mongodb import movie, user
 
 
 def get_mongodb_client():

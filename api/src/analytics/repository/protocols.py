@@ -1,0 +1,9 @@
+from typing import Protocol
+
+from ..models import View, ViewMessage
+
+
+class ViewRepository(Protocol):
+    async def add_view(self, message: ViewMessage) -> bool: ...
+    async def get_view(self, user_id: str, movie_id: str) -> ViewMessage: ...
+    async def view_list(self, user_id: str) -> list[View]: ...
