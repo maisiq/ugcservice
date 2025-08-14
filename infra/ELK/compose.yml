@@ -61,6 +61,8 @@ services:
       - 5044:5044/udp
     environment:
       - XPACK_MONITORING_ENABLED=false
+    env_file:
+      - ./logstash/.env
     secrets:
       - logstash_es_user
       - logstash_es_password
