@@ -13,7 +13,6 @@ COPY ./requirements/consumer.${BUILD}.txt /app/requirements.txt
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY ./consumer.py /app/consumer.py
-COPY ./config.py /app/config.py
+COPY . .
 
-CMD [ "python", "consumer.py" ]
+CMD [ "python", "main.py" ]

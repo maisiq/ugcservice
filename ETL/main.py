@@ -1,50 +1,36 @@
 import asyncio
-import logging
+import functools
+import signal
+import sys
 
-from aiokafka import AIOKafkaConsumer
-import clickhouse_connect
-from pydantic import ValidationError
-
-from config import kafka_config, ch_config, Topics
-from models import AnalyticEvent
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+from src.broker.consumer import get_kafka_consumer
+from src.etl.runner import run_etl
+from src.logger import get_logger, init_logger
+from src.storage.clickhouse import get_ch_client
+from src.utils.utils import signal_handler
 
 
-async def load_data(data: dict):
-    ch_client = await clickhouse_connect.get_async_client(
-        host=ch_config.HOST,
-        port=ch_config.PORT,
-        username=ch_config.USER,
-        password=ch_config.PASSWORD,
-    )
-    result = await ch_client.insert(ch_config.ANALYTICS_TABLE, [list(data.values())], list(data.keys()))
-    logger.debug(result.summary)
+async def main():
+    init_logger()
+    logger = get_logger()
+    logger.info('ETL process starting...')
+
+    loop = asyncio.get_running_loop()
+    stop_event = asyncio.Event()
+
+    for sig in (signal.SIGINT, signal.SIGTERM):
+        if sys.platform == 'win32':
+            signal.signal(sig, functools.partial(signal_handler, stop_event))
+        else:
+            loop.add_signal_handler(sig, signal_handler, stop_event, sig)
+
+    async with get_kafka_consumer() as kafka_consumer:
+        ch_client = await get_ch_client()
+        await asyncio.create_task(run_etl(stop_event, kafka_consumer, ch_client))
+        ch_client.client.close_connections()
+
+    logger.info('Process stopped')
 
 
-def deserializer(data: bytes) -> dict:
-    event = AnalyticEvent.model_validate_json(data)
-    return event.model_dump()
-
-
-async def consume():
-    consumer = AIOKafkaConsumer(
-        *[t.value for t in Topics],
-        bootstrap_servers=kafka_config.BOOTSTRAP_SERVERS,
-        group_id=kafka_config.CONSUMER_GROUP_ID,
-        enable_auto_commit=False,
-    )
-    async with consumer as c:
-        async for msg in c:
-            logger.debug("consumed: ", msg.topic, msg.partition, msg.offset, msg.key, msg.value, msg.timestamp)
-            try:
-                data = deserializer(msg.value)
-            except ValidationError as e:
-                logger.error(e)
-            else:
-                await load_data(data)
-                await consumer.commit()
-
-
-asyncio.run(consume())
+if __name__ == '__main__':
+    asyncio.run(main())
