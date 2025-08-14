@@ -56,6 +56,11 @@ mongosh "mongodb://$(</run/secrets/mongo-root-user):$(</run/secrets/mongo-root-p
         { _id: "hashed" }, 
         { numInitialChunks: 5 }
     );
+    sh.shardCollection(
+        "movies.users", 
+        { _id: "hashed" }, 
+        { numInitialChunks: 5 }
+    );
 EOF
 
 echo "🟢 MONGOS INIT COMPLETED"

@@ -14,8 +14,9 @@ x-properties: &props
     start_period: 1m
   profiles:
     - mongo_cluster
-    - api
     - run
+  logging:
+      driver: 'none'
 
 services:
   mongo-setup:
@@ -29,7 +30,6 @@ services:
       chown 999:999 /keys/mongo-keyfile"
     profiles:
       - mongo_cluster
-      - api
       - run
 
   mongors1n1:

@@ -1,9 +1,13 @@
 name: ugc_service
 
+# PROFILES:
+#   run: runs all services
+#   
+
 include:
-  - './mongo_cluster/compose.yml'
-  - './kafka_cluster/compose.yml'
-  - './ELK/compose.yml'
+  - './infra/mongo/compose.yml'
+  - './infra/kafka/compose.yml'
+  - './infra/ELK/compose.yml'
   - './api/tests/compose.yml'
 
 
@@ -29,8 +33,9 @@ services:
         gelf-address: udp://localhost:5044
         tag: 'api'
     healthcheck:
-      test: curl -sS localhost:8000 > /dev/null && exit 0 || exit 1
-      interval: 5s
+      start_interval: 10s
+      test: curl -sS localhost:8000/_ping > /dev/null && exit 0 || exit 1
+      interval: 10s
       retries: 5
     profiles:
       - api
@@ -42,7 +47,7 @@ services:
       context: ./ETL
       dockerfile: Dockerfile.etl
     volumes:
-      - ./ETL/consumer.py:/app/consumer.py
+      - ./ETL/:/app/
     env_file:
       - ./ETL/.env
     depends_on:
@@ -95,7 +100,7 @@ services:
 
 configs:
   nginx_conf:
-    file: ./nginx_server/config/nginx.conf
+    file: ./infra/nginx/config/nginx.conf
 
 volumes:
   nginx_logs:
@@ -104,7 +109,7 @@ volumes:
 secrets:
   mongo-root-user:
     name: ugc-mongo-root-username
-    file: ./mongo_cluster/secrets/root-user.txt
+    file: ./infra/mongo/secrets/root-user.txt
   mongo-root-pwd:
     name: ugc-mongo-root-pwd
-    file: ./mongo_cluster/secrets/root-pwd.txt
+    file: ./infra/mongo/secrets/root-pwd.txt
