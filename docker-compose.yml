@@ -19,7 +19,7 @@ services:
       dockerfile: Dockerfile
     image: ${API_DOCKER_IMAGE:?Api docker image name is required}
     restart: unless-stopped
-    command: ["uvicorn", "--reload", "--host", "0.0.0.0", "--port", "${APP_PORT:-8000}", "--workers", "3", "src.main:app"]
+    command: ["uvicorn", "--reload", "--host", "0.0.0.0", "--port", "${APP_PORT:-8000}", "--workers", "3", "--factory", "src.main:init"]
     volumes:
       - ./api/:/app/
     secrets:
@@ -27,11 +27,6 @@ services:
       - mongo-root-pwd
     env_file:
       - ./.env
-    logging:
-      driver: gelf
-      options:
-        gelf-address: udp://localhost:5044
-        tag: 'api'
     healthcheck:
       start_interval: 10s
       test: curl -sS localhost:8000/_ping > /dev/null && exit 0 || exit 1
@@ -40,6 +35,9 @@ services:
     profiles:
       - api
       - run
+    depends_on:
+      kafka0:
+        condition: service_healthy
   consumer:
     container_name: analytics_events_consumer
     image: ${CONSUMER_DOCKER_IMAGE:?Consumer docker image name is required}
@@ -78,7 +76,7 @@ services:
     container_name: clickhouse-server
     image: clickhouse:25.5.1
     env_file:
-      - ./clickhouse/.env  # CLICKHOUSE_USER & CLICKHOUSE_PASSWORD
+      - ./infra/clickhouse/.env  # CLICKHOUSE_USER & CLICKHOUSE_PASSWORD
     ports:
       - 18123:8123
       - 19000:9000
@@ -87,7 +85,7 @@ services:
         soft: 262144
         hard: 262144
     volumes:
-      - ./clickhouse/initdb:/docker-entrypoint-initdb.d/
+      - ./infra/clickhouse/initdb:/docker-entrypoint-initdb.d/
     healthcheck:
       test: ["CMD", "clickhouse-client", "--host=localhost", "--query=SELECT 1"]
       interval: 1m30s
