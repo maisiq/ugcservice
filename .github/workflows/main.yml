@@ -114,7 +114,7 @@ jobs:
         run: echo ${{ env.CR_TOKEN }} | docker login --username ${{ env.CR_USER }} --password-stdin ${{ env.CONTAINER_REGISTRY }}
       - name: Prepare env files
         run: |
-          cat MONGODB_URI=mongodb://mongos1:27017,mongos2:27017 > .env
+          echo MONGODB_URI=mongodb://mongos1:27017,mongos2:27017 > .env
 
           cat << EOF | tee ./infra/clickhouse/.env ./ETL/.env > /dev/null
           CLICKHOUSE_USER=root
@@ -132,7 +132,7 @@ jobs:
           ELASTIC_PASSWORD=example
           EOF
 
-          cat LOGSTASH_KEYSTORE_PASS=example > ./infra/ELK/logstash/.env
+          echo LOGSTASH_KEYSTORE_PASS=example > ./infra/ELK/logstash/.env
 
           mkdir ./infra/ELK/kibana/secrets
           mkdir ./infra/ELK/logstash/secrets
