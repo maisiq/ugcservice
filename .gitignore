@@ -6,3 +6,4 @@ tmp/
 *_user*
 *_password*
 secrets
+.pytest_cache/
