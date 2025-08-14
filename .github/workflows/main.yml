@@ -157,4 +157,5 @@ jobs:
             sleep 2
           done
           curl http://localhost:80/movie/1/rating
-          docker compose ps
+          docker compose ps --format 'table {{.Names}}\t{{.Status}}' -a
+          cat .env
