@@ -144,6 +144,8 @@ jobs:
           echo example > ./infra/ELK/logstash/secrets/es_password.txt
           echo root > ./infra/mongo/secrets/root-user.txt
           echo example > ./infra/mongo/secrets/root-pwd.txt
+
+          find . -type f -name "*.sh" -exec chmod +x {} +
       - name: Start containers
         run: |
           docker compose --profile run -f docker-compose.yml down
