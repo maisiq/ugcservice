@@ -15,8 +15,6 @@ x-properties: &props
   profiles:
     - mongo_cluster
     - run
-  logging:
-      driver: 'none'
 
 services:
   mongo-setup:
