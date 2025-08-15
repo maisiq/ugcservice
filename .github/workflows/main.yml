@@ -114,7 +114,7 @@ jobs:
         run: echo ${{ env.CR_TOKEN }} | docker login --username ${{ env.CR_USER }} --password-stdin ${{ env.CONTAINER_REGISTRY }}
       - name: Prepare env files
         run: |
-          echo MONGODB_URI=mongodb://mongos1:27017,mongos2:27017 > .env
+          echo MONGODB_URI=mongodb://root:example@mongos1:27017,mongos2:27017/?authSource=admin > .env
 
           cat << EOF | tee ./infra/clickhouse/.env ./ETL/.env > /dev/null
           CLICKHOUSE_USER=root
@@ -160,10 +160,10 @@ jobs:
           docker compose ps --format 'table {{.Names}}\t{{.Status}}' -a
       - name: Save logs
         run: |
-          mkdir -p /logs
-          docker compose --profile run logs > /logs/docker.log
+          mkdir -p ~/logs
+          docker compose --profile run logs > ~/logs/docker.log
       - name: Сохранить логи
         uses: actions/upload-artifact@v4
         with:
           name: docker.log
-          path: /logs/
+          path: ~/logs/
