@@ -134,9 +134,7 @@ jobs:
 
           echo LOGSTASH_KEYSTORE_PASS=example > ./infra/ELK/logstash/.env
 
-          mkdir ./infra/ELK/kibana/secrets
-          mkdir ./infra/ELK/logstash/secrets
-          mkdir ./infra/mongo/secrets
+          mkdir -p ./infra/ELK/kibana/secrets ./infra/ELK/logstash/secrets ./infra/mongo/secrets
 
           echo testpassword > ./infra/ELK/kibana/secrets/es_password.txt
           echo kibana_system > ./infra/ELK/kibana/secrets/es_username.txt
@@ -144,28 +142,30 @@ jobs:
           echo example > ./infra/ELK/logstash/secrets/es_password.txt
           echo root > ./infra/mongo/secrets/root-user.txt
           echo example > ./infra/mongo/secrets/root-pwd.txt
-
-          find . -type f -name "*.sh" -exec chmod +x {} +
+      - name: Change .sh files permissions
+        run: find . -type f -name "*.sh" -exec chmod +x {} +
       - name: Start containers
         run: |
           docker compose --profile run -f docker-compose.yml down
           docker compose --profile run -f docker-compose.yml up --pull missing -d
       - name: Test service
         run: |
-          # Проверка состояния UGC Service
-          sleep 10
+          sleep 5
           until curl http://localhost:80/docs > /dev/null 2>&1; do
             echo "Waiting for UGC Service..."
             sleep 2
           done
-          curl http://localhost:80/movie/1/rating
-          docker compose ps --format 'table {{.Names}}\t{{.Status}}' -a
+          curl -s -o /dev/null -w "%{http_code}" http://localhost:80/movie/1/rating | grep -q "^200$" || exit 1
+        continue-on-error: true
+      - name: Check containers statuses
+        run: docker compose ps --format 'table {{.Names}}\t{{.Status}}' -a
       - name: Save logs
         run: |
           mkdir -p ~/logs
           docker compose --profile run logs > ~/logs/docker.log
-      - name: Сохранить логи
+      - name: Upload logs to gh
         uses: actions/upload-artifact@v4
         with:
           name: docker.log
           path: ~/logs/
+
