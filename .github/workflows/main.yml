@@ -151,11 +151,19 @@ jobs:
       - name: Test service
         run: |
           # Проверка состояния UGC Service
-          sleep 20
+          sleep 10
           until curl http://localhost:80/docs > /dev/null 2>&1; do
             echo "Waiting for UGC Service..."
             sleep 2
           done
           curl http://localhost:80/movie/1/rating
           docker compose ps --format 'table {{.Names}}\t{{.Status}}' -a
-          cat .env
+      - name: Save logs
+        run: |
+          mkdir -p /logs
+          docker compose --profile run logs > /logs/docker.log
+      - name: Сохранить логи
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker.log
+          path: /logs/
