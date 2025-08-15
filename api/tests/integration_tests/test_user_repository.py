@@ -1,5 +1,5 @@
 import pytest
-from src.db.config import MONGO_DB, MongoCollections
+from src.config.db import MONGO_DB, MongoCollections
 
 
 @pytest.mark.mongo

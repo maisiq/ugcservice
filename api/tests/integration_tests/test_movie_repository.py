@@ -1,8 +1,6 @@
 import pytest
-
 from motor.motor_asyncio import AsyncIOMotorClient
-
-from src.db.config import MONGO_DB, MongoCollections
+from src.config.db import MONGO_DB, MongoCollections
 
 
 @pytest.mark.mongo
@@ -32,4 +30,4 @@ async def test_repo_returns_rating(data, db_client: AsyncIOMotorClient, mongo_mo
 
     movie_rating = await mongo_movie_repo.rating(movie_id)
 
-    assert movie_rating['rating'] == round(value, 1), 'Ошибка получения данных'
+    assert movie_rating == round(value, 1), 'Ошибка получения данных'

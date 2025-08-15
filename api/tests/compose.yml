@@ -5,16 +5,18 @@ services:
     container_name: api_tests
     image: ${API_DOCKER_IMAGE}
     build:
-      context: ./api
+      context: ../
       dockerfile: Dockerfile
-    command: /bin/bash -c "pip install -q -r ../requirements/api.test.txt && pytest"
+      args:
+        - BUILD=test
+    command: pytest
     environment:
       TEST_DB_URI: mongodb://root:example@test_db:27017/?directConnection=true&authSource=admin
       KAFKA_SERVER0: 'stub-for-now' # project has no tests for events endpoints yet
       KAFKA_SERVER1: 'stub-for-now'
       KAFKA_SERVER2: 'stub-for-now'
     volumes:
-      - ./api/:/app/
+      - ../:/app/
     depends_on:
       test_db:
         condition: service_healthy

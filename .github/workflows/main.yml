@@ -23,7 +23,7 @@ env:
   BUILD: dev
 
 jobs:
-  test-api:
+  api-tests:
     runs-on: ubuntu-latest
     env:
       TEST_DB_URI: mongodb://localhost:27017/?directConnection=true
@@ -64,7 +64,7 @@ jobs:
         run: cd ./api && pytest
   build:
     runs-on: ubuntu-latest
-    needs: test-api
+    needs: api-tests
     steps:
       - uses: actions/checkout@v4
         with:
@@ -102,7 +102,6 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    # environment: deploy
     env:
       MONGODB_URI: ${{ secrets.MONGODB_URI }}
       KAFKA_SERVER0: ${{ secrets.KAFKA_SERVER0 }}
@@ -115,33 +114,58 @@ jobs:
         run: echo ${{ env.CR_TOKEN }} | docker login --username ${{ env.CR_USER }} --password-stdin ${{ env.CONTAINER_REGISTRY }}
       - name: Prepare env files
         run: |
-          echo MONGODB_URI=mongodb://mongos1:27017,mongos2:27017 >> .env
-          echo KAFKA_SERVER0=kafka0:9094 >> .env
-          echo KAFKA_SERVER1=kafka1:9094 >> .env
-          echo KAFKA_SERVER2=kafka2:9094 >> .env
-          echo ELASTIC_USER=elastic >> ./ELK/elasticsearch/.env
-          echo ELASTIC_PASSWORD=example >> ./ELK/elasticsearch/.env
-          echo CLICKHOUSE_PASSWORD=example >> ./clickhouse/.env
-          echo CLICKHOUSE_USER=root >> ./clickhouse/.env
-          echo CLICKHOUSE_PASSWORD=example >> ./ETL/.env
-          echo CLICKHOUSE_USER=root >> ./ETL/.env
-          mkdir ./ELK/kibana/secrets && mkdir ./ELK/logstash/secrets
-          echo testpassword > ./ELK/kibana/secrets/es_password.txt
-          echo kibana_system > ./ELK/kibana/secrets/es_username.txt
-          echo elastic > ./ELK/logstash/secrets/es_user.txt
-          echo example > ./ELK/logstash/secrets/es_password.txt
-          mkdir ./mongo_cluster/secrets
-          echo root > ./mongo_cluster/secrets/root-user.txt
-          echo example > ./mongo_cluster/secrets/root-pwd.txt
+          echo MONGODB_URI=mongodb://root:example@mongos1:27017,mongos2:27017/?authSource=admin > .env
+
+          cat << EOF | tee ./infra/clickhouse/.env ./ETL/.env > /dev/null
+          CLICKHOUSE_USER=root
+          CLICKHOUSE_PASSWORD=example
+          EOF
+
+          cat << EOF | tee -a .env ./ETL/.env > /dev/null
+          KAFKA_SERVER0=kafka0:9094
+          KAFKA_SERVER1=kafka1:9094
+          KAFKA_SERVER2=kafka2:9094
+          EOF
+
+          cat << EOF > ./infra/ELK/elasticsearch/.env
+          ELASTIC_USER=elastic
+          ELASTIC_PASSWORD=example
+          EOF
+
+          echo LOGSTASH_KEYSTORE_PASS=example > ./infra/ELK/logstash/.env
+
+          mkdir ./infra/ELK/kibana/secrets
+          mkdir ./infra/ELK/logstash/secrets
+          mkdir ./infra/mongo/secrets
+
+          echo testpassword > ./infra/ELK/kibana/secrets/es_password.txt
+          echo kibana_system > ./infra/ELK/kibana/secrets/es_username.txt
+          echo elastic > ./infra/ELK/logstash/secrets/es_user.txt
+          echo example > ./infra/ELK/logstash/secrets/es_password.txt
+          echo root > ./infra/mongo/secrets/root-user.txt
+          echo example > ./infra/mongo/secrets/root-pwd.txt
+
+          find . -type f -name "*.sh" -exec chmod +x {} +
       - name: Start containers
         run: |
           docker compose --profile run -f docker-compose.yml down
           docker compose --profile run -f docker-compose.yml up --pull missing -d
-      - name: Test API
+      - name: Test service
         run: |
           # Проверка состояния UGC Service
+          sleep 10
           until curl http://localhost:80/docs > /dev/null 2>&1; do
             echo "Waiting for UGC Service..."
             sleep 2
           done
-          docker compose ps
+          curl http://localhost:80/movie/1/rating
+          docker compose ps --format 'table {{.Names}}\t{{.Status}}' -a
+      - name: Save logs
+        run: |
+          mkdir -p ~/logs
+          docker compose --profile run logs > ~/logs/docker.log
+      - name: Сохранить логи
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker.log
+          path: ~/logs/
