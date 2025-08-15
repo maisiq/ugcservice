@@ -66,6 +66,9 @@ services:
         mode: 0440
     volumes:
       - nginx_logs:/var/logs/nginx/
+    depends_on:
+      api:
+        condition: service_healthy
     ports:
       - 80:80
     restart: unless-stopped
