@@ -23,7 +23,7 @@ env:
   BUILD: dev
 
 jobs:
-  test-api:
+  api-tests:
     runs-on: ubuntu-latest
     env:
       TEST_DB_URI: mongodb://localhost:27017/?directConnection=true
@@ -64,7 +64,7 @@ jobs:
         run: cd ./api && pytest
   build:
     runs-on: ubuntu-latest
-    needs: test-api
+    needs: api-tests
     steps:
       - uses: actions/checkout@v4
         with:
@@ -102,7 +102,6 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    # environment: deploy
     env:
       MONGODB_URI: ${{ secrets.MONGODB_URI }}
       KAFKA_SERVER0: ${{ secrets.KAFKA_SERVER0 }}
@@ -143,13 +142,13 @@ jobs:
           echo example > ./infra/ELK/logstash/secrets/es_password.txt
           echo root > ./infra/mongo/secrets/root-user.txt
           echo example > ./infra/mongo/secrets/root-pwd.txt
-      - name: Change .sh files' permissions
+      - name: Change .sh files permissions
         run: find . -type f -name "*.sh" -exec chmod +x {} +
       - name: Start containers
         run: |
           docker compose --profile run -f docker-compose.yml down
           docker compose --profile run -f docker-compose.yml up --pull missing -d
-      - name: Test API
+      - name: Test service
         run: |
           sleep 5
           until curl http://localhost:80/docs > /dev/null 2>&1; do
@@ -158,7 +157,7 @@ jobs:
           done
           curl -s -o /dev/null -w "%{http_code}" http://localhost:80/movie/1/rating | grep -q "^200$" || exit 1
         continue-on-error: true
-      - name: Check containers' statuses
+      - name: Check containers statuses
         run: docker compose ps --format 'table {{.Names}}\t{{.Status}}' -a
       - name: Save logs
         run: |
@@ -169,3 +168,4 @@ jobs:
         with:
           name: docker.log
           path: ~/logs/
+

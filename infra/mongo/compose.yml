@@ -15,8 +15,6 @@ x-properties: &props
   profiles:
     - mongo_cluster
     - run
-  logging:
-      driver: 'none'
 
 services:
   mongo-setup:
@@ -129,6 +127,9 @@ services:
     secrets:
       - mongo-root-user
       - mongo-root-pwd
+    depends_on:
+      mongo-setup:
+        condition: service_completed_successfully
 
   mongos2:
     extends: mongos1

@@ -1,7 +1,6 @@
 import pytest
-
 from src.movies.repositories.protocols import MovieRepository, UserRepository
-from src.services.protocols import UserMovieService
+from src.movies.services.protocols import UserMovieService
 
 
 async def test_service_can_add_review(
@@ -69,7 +68,7 @@ async def test_user_cant_add_review_on_same_film_twice(data, user_movie_service:
 async def test_service_cant_update_non_existed_review(data, user_movie_service: UserMovieService):
     user_id, movie_id, review = data['user_id'], data['movie_id'], data['review']
 
-    with pytest.raises(Exception, match='There is no review with this id'):
+    with pytest.raises(Exception, match='There is no review with this user_id'):
         await user_movie_service.update_review(user_id, movie_id, review)
 
 
@@ -87,7 +86,7 @@ async def test_get_movie_rating(
     user_data = await user_repo.get_data(user_id)
     user_assessement = user_data['ratings'][0]['value']
 
-    assert rating == {'rating': value}, 'Неправильный рейтинг фильма'
+    assert rating == value, 'Неправильный рейтинг фильма'
     assert user_assessement == value, 'Неправильный рейтинг фильма'
 
 
@@ -105,8 +104,8 @@ async def test_can_rate_few_movies(
     rating1 = await movie_repo.rating(movie1_id)
     rating2 = await movie_repo.rating(movie2_id)
 
-    assert rating1 == {'rating': value1}, 'Неправильный рейтинг фильма 1'
-    assert rating2 == {'rating': value2}, 'Неправильный рейтинг фильма 2'
+    assert rating1 == value1, 'Неправильный рейтинг фильма 1'
+    assert rating2 == value2, 'Неправильный рейтинг фильма 2'
 
 
 async def test_can_update_assessment(
@@ -122,7 +121,7 @@ async def test_can_update_assessment(
 
     rating = await movie_repo.rating(movie_id)
 
-    assert rating == {'rating': new_value}, 'Неправильный рейтинг фильма'
+    assert rating == new_value, 'Неправильный рейтинг фильма'
 
 
 async def test_returns_right_average_rating(
@@ -145,4 +144,4 @@ async def test_returns_right_average_rating(
 
     rating = await movie_repo.rating(movie_id)
 
-    assert rating == {'rating': round(sum(ratings) / len(ratings), 1)}, 'Неправильный рейтинг фильма'
+    assert rating == round(sum(ratings) / len(ratings), 1), 'Неправильный рейтинг фильма'

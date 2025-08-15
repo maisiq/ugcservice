@@ -29,6 +29,7 @@ services:
       - ./.env
     healthcheck:
       start_interval: 10s
+      start_period: 10s
       test: curl -sS localhost:8000/_ping > /dev/null && exit 0 || exit 1
       interval: 10s
       retries: 5
@@ -65,6 +66,9 @@ services:
         mode: 0440
     volumes:
       - nginx_logs:/var/logs/nginx/
+    depends_on:
+      api:
+        condition: service_healthy
     ports:
       - 80:80
     restart: unless-stopped
